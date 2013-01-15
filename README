@@ -38,3 +38,10 @@ for use with the supported compilers. The available setup files are:
   $ ls config-setup/
   gfortran-debug.setup  ifort-debug.setup  pgf95-debug.setup  xlf2003-debug.setup
   gfortran.setup        ifort.setup        pgf95.setup        xlf2003.setup
+  
+These files can be used with the configure script. For example, a gfortran build can be
+achieved like so:
+
+  $ . config-setup/gfortran.setup ; ./configure --prefix=$PWD
+
+Use and/or modify the setup files as required.
