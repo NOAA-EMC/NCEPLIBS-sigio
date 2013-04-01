@@ -1,0 +1,47 @@
+Instructions for building and installing sigio on Unix
+******************************************************
+
+$Revision: $
+nceplibs support email: ncep.list.emc.nceplibs.support@noaa.gov
+
+
+To build the sigio library, you can specify the necessary information directly to
+the configure script that generates the makefiles. For example, on WCOSS/tide:
+
+  $ ./configure --prefix=${PWD} \
+                FC="ifort" \
+                FCFLAGS="-O2 -g -xHOST -traceback -free -convert big_endian -assume byterecl"
+
+The --prefix switch sets the installation directory and defaults to /usr/local so
+make sure you set it to a directory in which you have write access.
+
+The definition of the "FC" enviroment variable is not strictly necessary as it defaults
+to "ifort" on linux systems if available (followed by "gfortran" and "pgf95" if not), and
+to "xlf2003" on AIX systems.
+
+To start the library build for a particular configuration, simply type
+
+  $ make
+
+To install the library in a directory conforming to the NCO organisation and
+naming conventions, type:
+
+  $ make nco_install
+
+To perform a GNU-type install, type:
+
+  $ make install
+
+The "config-setup/" subdirectory contains some sample build configuration setup files
+for use with the supported compilers. The available setup files are:
+
+  $ ls config-setup/
+  gfortran-debug.setup  ifort-debug.setup  pgf95-debug.setup  xlf2003-debug.setup
+  gfortran.setup        ifort.setup        pgf95.setup        xlf2003.setup
+  
+These files can be used with the configure script. For example, a gfortran build can be
+achieved like so:
+
+  $ . config-setup/gfortran.setup ; ./configure --prefix=$PWD
+
+Use and/or modify the setup files as required.
