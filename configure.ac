@@ -2,7 +2,7 @@
 AC_REVISION($Id$)
 
 ## Initialise autoconf
-AC_INIT([sigio], [1.0.1], [ncep.list.emc.nceplibs.support@noaa.gov])
+AC_INIT([sigio], [v1.1.0], [ncep.list.emc.nceplibs.support@noaa.gov])
 
 # Output info for user
 AC_MSG_NOTICE([sigio AC_PACKAGE_VERSION])
