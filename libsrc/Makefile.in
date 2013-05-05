@@ -39,10 +39,10 @@ $(LIBRARY): $(OBJ_FILES)
 library: $(LIBRARY)
 
 clean:
-	-rm *.o *.mod *.a
+	-rm *.o *.mod *.a >/dev/null 2>&1
 
 distclean:
-	-rm Makefile
+	-rm Makefile >/dev/null 2>&1
 
 check: library
 	@echo "***THIS IS WHERE THE UNIT TEST INVOCATION GOES***"
