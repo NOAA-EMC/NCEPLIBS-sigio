@@ -545,17 +545,8 @@ contains
           head%icen2,head%iens,head%idpp,head%idsl,head%idvc,head%idvm,&
           head%idvt,head%idrun,head%idusr,head%pdryini,head%ncldt,&
           head%ixgr, head%ixga
-        if(ios.ne.0) then
-        read(lu,iostat=ios) head%fhour,head%idate,head%jcap,head%levs,&
-          head%itrun,head%iorder,head%irealf,head%igen,head%latf,head%lonf,&
-          head%latb,head%lonb,head%latr,head%lonr,head%ntrac,head%nvcoord,&
-          head%icen2,head%iens,head%idpp,head%idsl,head%idvc,head%idvm,&
-          head%idvt,head%idrun,head%idusr,head%pdryini,head%ncldt,&
-          head%ixgr
-          if(ios.ne.0) return
-          head%ixga=0
-          head%nxga=0
-        endif
+        if(ios.ne.0) return
+        if(head%ixga==0) head%nxga=0
         call sigio_alhead(head,iret)
         read(lu,iostat=ios) head%vcoord
         if(ios.ne.0) return
