@@ -1626,6 +1626,7 @@ contains
     num_p3d=n3dzhaocld+n3dfercld+n3dcldpdf
 !!  num_p2d=1 is reserved for "ddvel", sfc wind enhancement due to convection
     num_p2d=1+n2dzhaocld+n2dfercld+n2dcldpdf
+    if(head%ixgr<=0) num_p2d=0
     head%nxgr=num_p3d*head%levs+num_p2d
 
 !--for dynamics
