@@ -16,6 +16,8 @@ module sigio_r_module
 !   
 ! Program History Log:
 !   1999-01-18  Mark Iredell
+!   2013-10-21  Jun Wang: comment the line setting pdryini to sigio_realfill 
+!                         for 200509 version 
 !
 ! Modules Used:
 !   sigio_module     API for global spectral sigma file I/O
@@ -541,7 +543,7 @@ contains
       head%sl=sigio_realfill
       head%ak=sigio_realfill
       head%bk=sigio_realfill
-      head%pdryini=sigio_realfill
+!      head%pdryini=sigio_realfill
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     else
       iskip=0
@@ -584,6 +586,8 @@ contains
       head%idusr=head2%ext(23)
       head%pdryini=head2%ext(24)
       head%ncldt=head2%ext(25)
+      head%ixgr=head2%ext(26)
+      head%ixga=head2%ext(27)
       head%si=sigio_realfill
       head%sl=sigio_realfill
       head%ak=sigio_realfill
