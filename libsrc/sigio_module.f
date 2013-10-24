@@ -1579,7 +1579,7 @@ contains
   subroutine sigio_adhead(head)
     implicit none
     type(sigio_head),intent(inout):: head
-    integer jxss,nspec
+    integer jxss,nspec,n1,n2
     integer a, b, c                        
     integer n3dzhaocld, n3dfercld, n3dcldpdf, n3dflxtvd
     integer n2dzhaocld, n2dfercld, n2dcldpdf, n2dflxtvd
@@ -1669,9 +1669,12 @@ contains
 !                  400, 400/)
       endif
       head%ldata(1:nspec)=4*head%irealf*(head%jcap+1)*(head%jcap+2)
-      head%ldata(nspec+1:nspec+head%nxgr)=4*head%irealf*head%lonb*head%latb
-      head%ldata(nspec+head%nxgr+1:nspec+head%nxgr+1)=4*head%irealf*head%nxss
-      head%ldata(nspec+head%nxgr+2:head%ndata)=4*head%irealf*head%lonf*head%latf
+      n1=nspec+1; n2=nspec+head%nxgr
+      if(head%nxgr>0) head%ldata(n1:n2)=4*head%irealf*head%lonb*head%latb
+      n1=nspec+head%nxgr+1; n2=nspec+head%nxgr+jxss
+      if(jxss>0) head%ldata(n1:n2)=4*head%irealf*head%nxss
+      n1=nspec+head%nxgr+jxss+1; n2=nspec+head%nxgr+jxss+head%nxga
+      if(head%nxga>0) head%ldata(n1:n2)=4*head%irealf*head%lonf*head%latf
     else
       head%nhead=2
       head%ndata=nspec+head%nxgr+head%nxga

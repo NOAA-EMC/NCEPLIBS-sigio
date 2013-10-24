@@ -16,8 +16,6 @@ module sigio_r_module
 !   
 ! Program History Log:
 !   1999-01-18  Mark Iredell
-!   2013-10-21  Jun Wang: comment the line setting pdryini to sigio_realfill 
-!                         for 200509 version 
 !
 ! Modules Used:
 !   sigio_module     API for global spectral sigma file I/O
