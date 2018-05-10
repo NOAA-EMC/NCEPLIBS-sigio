@@ -532,6 +532,7 @@ contains
     rewind lu
     read(lu,iostat=ios) head%clabsig
     if(ios.ne.0) return
+    if(head%clabsig(1:8).ne.'GFS SIG ') return
     if(head%clabsig(1:8).eq.'GFS SIG ') then  ! modern sigma file
       rewind lu
       read(lu,iostat=ios) cgfs,csig,head%ivs,nhead,ndata,nresv
