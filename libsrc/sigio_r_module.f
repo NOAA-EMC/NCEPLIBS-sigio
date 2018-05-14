@@ -541,7 +541,7 @@ contains
       head%sl=sigio_realfill
       head%ak=sigio_realfill
       head%bk=sigio_realfill
-      head%pdryini=sigio_realfill
+!      head%pdryini=sigio_realfill
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     else
       iskip=0
@@ -584,6 +584,8 @@ contains
       head%idusr=head2%ext(23)
       head%pdryini=head2%ext(24)
       head%ncldt=head2%ext(25)
+      head%ixgr=head2%ext(26)
+      head%ixga=head2%ext(27)
       head%si=sigio_realfill
       head%sl=sigio_realfill
       head%ak=sigio_realfill
