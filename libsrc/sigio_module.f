@@ -16,6 +16,7 @@ module sigio_module
 !   1999-01-18  Mark Iredell
 !   2013-10-14  Fanglin Yang: Added dynamics restart fields (ixga etc)
 !                 and restructureed physics restart fields (ixgr etc).
+!   2018-05-11  Mark Iredell: Added error check for NEMSIO file.
 !
 ! Public Variables:
 !   sigio_lhead1      Integer parameter length of first header record (=32)
@@ -341,6 +342,7 @@ module sigio_module
 !         -3   Allocation or deallocation error
 !         -4   Data record I/O error
 !         -5   Insufficient data dimensions allocated
+!         -6   Attempted to read a NEMSIO file
 !
 ! Examples:
 !   (1) Read the entire sigma file 'sigf24' and
@@ -530,12 +532,14 @@ contains
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     iret=-2
     rewind lu
-    
     read(lu,iostat=ios) head%clabsig
     if(ios.ne.0) return
-        
-    if(head%clabsig(1:8).ne.'GFS SIG ') return 
-    if(head%clabsig(1:8).eq.'GFS SIG ') then  ! modern sigma file
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    if(head%clabsig(1:6).eq.'NEMSIO') then  ! nemsio file
+      iret=-6
+      return
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    elseif(head%clabsig(1:8).eq.'GFS SIG ') then  ! modern sigma file
       rewind lu
       read(lu,iostat=ios) cgfs,csig,head%ivs,nhead,ndata,nresv
       if(ios.ne.0) return
@@ -576,7 +580,7 @@ contains
         return
       endif
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    else
+    else  ! old sigma file
       read(lu,iostat=ios) head2%fhour,head2%idate,head2%sisl,head2%ext
       if(ios.ne.0) return
       head%fhour=head2%fhour
