@@ -1,9 +1,9 @@
 ## Put version control id tag in output configure script
-AC_REVISION($Id$)
+AC_REVISION($Id: configure.ac 43497 2014-07-28 13:34:36Z fanglin.yang@noaa.gov $)
 
 
 ## Initialise autoconf
-AC_INIT([nceplibs sigio], [v2.0.1_beta], [ncep.list.emc.nceplibs.support@noaa.gov], [sigio])
+AC_INIT([nceplibs sigio], [v2.0.1], [ncep.list.emc.nceplibs.support@noaa.gov], [sigio])
 
 
 # Output info for user

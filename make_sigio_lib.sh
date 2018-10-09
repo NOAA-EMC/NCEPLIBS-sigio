@@ -1,7 +1,7 @@
 #!/bin/sh
 ###############################################################################
 #
-# $Id$
+# $Id: make_sigio_lib.sh 27890 2013-04-23 14:11:15Z paul.vandelst@noaa.gov $
 #
 # Script to configure, build, and install the library.
 #

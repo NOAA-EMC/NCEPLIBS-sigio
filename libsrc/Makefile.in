@@ -16,7 +16,7 @@ installdir = $(prefix)/$(distdir)
 
 # Compiler substitution variables
 FC      = @FC@
-FCFLAGS = @FCFLAGS@ -fPIC -c
+FCFLAGS = @FCFLAGS@ -c
 AR       = @AR@
 ARFLAGS  = @ARFLAGS@
 RANLIB   = @RANLIB@
