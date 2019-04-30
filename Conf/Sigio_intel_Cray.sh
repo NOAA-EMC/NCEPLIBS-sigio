@@ -1,6 +1,6 @@
 # *** for WCOSS Cray (intel) ***
  module load intel/18.1.163
- module load sigio/v2.0.1
+ module load sigio/v2.0.4
 
  export CC=icc
  export FC=ifort
