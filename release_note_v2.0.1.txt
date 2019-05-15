@@ -1,0 +1,41 @@
+RELEASE NOTES: sigio_v2.0.1
+https://docs.google.com/a/noaa.gov/document/d/17xkFkDB7PBWIEAfXjxOj4jyk7Up16hThxj9fVTqKyIA/edit 
+
+v2.0.1 - released July 22, 2014
+
+SVN HISTORY
+r32859  07/22/2014 initial release to NCO 
+
+CODE CHANGES:
+sigio_v2.0.1 is required for the upcoming Q1F15  T1534 GFS implementation.      
+Fanglin Yang added dynamics restart fields and restructured physics restart fields.
+
+RESOURCE INFORMATION
+svn URL: https://svnemc.ncep.noaa.gov/projects/nceplibs/sigio/tags/sigio_v2.0.1
+WCOSS directory on tide : /global/save/Fanglin.Yang/nwpara/sigio_v2.0.1
+
+INSTRUCTIONS FOR BUILDING AND INSTALLING SIGIO 
+copy /global/save/Fanglin.Yang/nwpara/sigio_v2.0.1 to /nwprod/lib/sigio/v2.0.1
+make_sigio_lib.sh ifort.setup
+
+A directory  /nwprod/lib/sigio/v2.0.1/sigio_v2.0.1  is created and organised according 
+to the current NCO structure on WCOSs as shown below:
+
+  /nwprod/lib/sigio/v2.0.1/sigio_v2.0.1
+    |
+    |--libsigio_v2.0.1.a
+    |
+    `--incmod/sigio_v2.0.1
+        sigio_module.mod  sigio_r_module.mod
+         
+mv  /nwprod/lib/sigio/v2.0.1/sigio_v2.0.1/*   /nwprod/lib/sigio/v2.0.1
+rm -r  /nwprod/lib/sigio/v2.0.1/sigio_v2.0.1
+
+
+TESTING
+This library has been used for running  the T1534 GFS for almost a year.  
+
+
+
+
+

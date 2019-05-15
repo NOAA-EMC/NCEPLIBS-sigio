@@ -1,6 +1,10 @@
 # *** for Theia (intel) ***
- module load intel/18.1.163
- module load dev/sigio/2.1.0
+ WORKDIR=/scratch3/NCEPDEV/nwprod/IPS
+ MODULEPATH=/apps/lmod/lmod/modulefiles/Core
+ module use -a $WORKDIR/modulefiles/core_third
+ module load EnvVars/1.0.2
+ module load ips/18.0.1.163
+ module load dev/sigio/2.0.1
 
  export CC=icc
  export FC=ifort
