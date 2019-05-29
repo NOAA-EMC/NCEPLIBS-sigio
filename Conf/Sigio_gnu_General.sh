@@ -5,7 +5,7 @@
 
  ANCHORDIR=..
  export COMP=gnu
- export SIGIO_VER=v2.0.1
+ export SIGIO_VER=v2.1.0
  export SIGIO_SRC=
  export SIGIO_INC4=$ANCHORDIR/include/sigio_${SIGIO_VER}_4
  export SIGIO_LIB4=$ANCHORDIR/libsigio_${SIGIO_VER}_4.a
