@@ -1,11 +1,17 @@
 # *** manually set environments (for gnu compiler) of sigio ***
 
-# !!! module environment (*THEIA*) !!!
-#module load gcc/6.2.0   # use default GCC comiler for compatible to w3emc
+ : ${USERMODE:=false}  # user mode (USERMODE) is closed by default
+                       # set env var USERMODE to "true" to active it
+ ${USERMODE} && {
+    echo "Environment set by user"
+    echo "Use default GCC compiler for compatible to w3emc"
+    module use -a /apps/modules/modulefamilies/intel
+    module load impi/5.1.2.150
+ }
 
  ANCHORDIR=..
  export COMP=gnu
- export SIGIO_VER=v2.1.0
+ export SIGIO_VER=v2.0.1
  export SIGIO_SRC=
  export SIGIO_INC4=$ANCHORDIR/include/sigio_${SIGIO_VER}_4
  export SIGIO_LIB4=$ANCHORDIR/libsigio_${SIGIO_VER}_4.a
