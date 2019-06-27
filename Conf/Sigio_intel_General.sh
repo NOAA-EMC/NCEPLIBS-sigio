@@ -14,7 +14,7 @@
 
  ANCHORDIR=..
  export COMP=ips
- export SIGIO_VER=v2.1.0
+ export SIGIO_VER=v2.0.1
  export SIGIO_SRC=
  export SIGIO_INC4=$ANCHORDIR/include/sigio_${SIGIO_VER}_4
  export SIGIO_LIB4=$ANCHORDIR/libsigio_${SIGIO_VER}_4.a
@@ -27,14 +27,14 @@
  export MPICC=mpiicc
  export MPIFC=mpiifort
 
- export DEBUG="-g -O0"
- export CFLAGS="-O3 -fPIC"
- export FFLAGS="-O3 -convert big_endian -assume byterecl -fPIC"
+ export DEBUG="-g -traceback -O0"
+ export CFLAGS="-g -traceback -O3 -fPIC"
+ export FFLAGS="-g -traceback -O3 -convert big_endian -assume byterecl -fPIC"
  export FPPCPP="-cpp"
  export FREEFORM="-free"
  export CPPFLAGS="-P -traditional-cpp"
- export MPICFLAGS="-O3 -fPIC"
- export MPIFFLAGS="-O3 -fPIC"
+ export MPICFLAGS="-g -traceback -O3 -fPIC"
+ export MPIFFLAGS="-g -traceback -O3 -fPIC"
  export MODPATH="-module "
  export I4R4="-integer-size 32 -real-size 32"
  export I4R8="-integer-size 32 -real-size 64"

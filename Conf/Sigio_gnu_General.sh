@@ -11,7 +11,7 @@
 
  ANCHORDIR=..
  export COMP=gnu
- export SIGIO_VER=v2.1.0
+ export SIGIO_VER=v2.0.1
  export SIGIO_SRC=
  export SIGIO_INC4=$ANCHORDIR/include/sigio_${SIGIO_VER}_4
  export SIGIO_LIB4=$ANCHORDIR/libsigio_${SIGIO_VER}_4.a
@@ -24,14 +24,14 @@
  export MPICC=mpigcc
  export MPIFC=mpif90
 
- export DEBUG="-g -O0"
- export CFLAGS="-O3 -fPIC"
- export FFLAGS="-O3 -fconvert=big-endian -fimplicit-none -fno-second-underscore -frecord-marker=4 -funroll-loops -Wall -fPIC"
+ export DEBUG="-g -fbacktrace -O0"
+ export CFLAGS="-g -O3 -fPIC"
+ export FFLAGS="-g -fbacktrace -O3 -fconvert=big-endian -fimplicit-none -fno-second-underscore -frecord-marker=4 -funroll-loops -Wall -fPIC"
  export FREEFORM="-ffree-form"
  export FPPCPP="-cpp"
  export CPPFLAGS="-P -traditional-cpp"
- export MPICFLAGS="-O3 -fPIC"
- export MPIFFLAGS="-O3 -fPIC"
+ export MPICFLAGS="-g -O3 -fPIC"
+ export MPIFFLAGS="-g -fbacktrace -O3 -fconvert=big-endian -fimplicit-none -fno-second-underscore -frecord-marker=4 -funroll-loops -Wall -fPIC"
  export MODPATH="-J"
  export I4R4=""
  export I4R8="-fdefault-real-8"
