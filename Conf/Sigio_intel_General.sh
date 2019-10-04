@@ -5,19 +5,8 @@
  ${USERMODE} && {
     echo "Environment set by user"
 # On theia/cray, user can load environment
-#   module load intel/18.0.1.163
-# Or set environment on specific platform
-    intel_version=2018.1.163
-    intel_topdir=/apps/intel/compilers_and_libraries_$intel_version
-    source $intel_topdir/linux/bin/compilervars.sh intel64
+    module load intel/18.0.1.163
  }
-
- ANCHORDIR=..
- export COMP=ips
- export SIGIO_VER=v2.1.0
- export SIGIO_SRC=
- export SIGIO_INC4=$ANCHORDIR/include/sigio_${SIGIO_VER}_4
- export SIGIO_LIB4=$ANCHORDIR/libsigio_${SIGIO_VER}_4.a
 
  export CC=icc
  export FC=ifort
