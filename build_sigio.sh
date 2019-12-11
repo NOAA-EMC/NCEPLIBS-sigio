@@ -87,7 +87,7 @@ set -x
        SIGIO_INC4=$INCP_DIR4/$SIGIO_INC4
        [ -d $SIGIO_INC4 ] && { rm -rf $SIGIO_INC4; } \
                           || { mkdir -p $INCP_DIR4; }
-       SRC_DIR=$instloc/src
+       SRC_DIR=$instloc/src/${libver}
        [[ $instloc == .. ]] && SRC_DIR=
      }
      [ -d $LIB_DIR4 ] || mkdir -p $LIB_DIR4
