@@ -9,13 +9,6 @@
     module load impi/5.1.2.150
  }
 
- ANCHORDIR=..
- export COMP=gnu
- export SIGIO_VER=v2.1.0
- export SIGIO_SRC=
- export SIGIO_INC4=$ANCHORDIR/include/sigio_${SIGIO_VER}_4
- export SIGIO_LIB4=$ANCHORDIR/libsigio_${SIGIO_VER}_4.a
-
  export CC=gcc
  export FC=gfortran
  export CPP=cpp
