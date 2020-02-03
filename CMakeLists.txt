@@ -35,17 +35,17 @@ if( (BUILD_RELEASE) OR (BUILD_PRODUCTION) )
   endif()
 endif()
 
+set(lib_name ${PROJECT_NAME}_4)
+set(versioned_lib_name ${PROJECT_NAME}_v${PROJECT_VERSION}_4)
 
 file(GLOB fortran_src ${CMAKE_CURRENT_SOURCE_DIR}/src/*.f)
-set(lib_name ${PROJECT_NAME})
-set(versioned_lib_name ${PROJECT_NAME}_v${PROJECT_VERSION})
 add_library(${lib_name} STATIC ${fortran_src})
-
 set_target_properties(${lib_name} PROPERTIES OUTPUT_NAME "${versioned_lib_name}")
 
 target_compile_options(${lib_name} PRIVATE ${fortran_flags})
-set(module_dir "${CMAKE_CURRENT_BINARY_DIR}/include_4")
-set_target_properties(${lib_name} PROPERTIES Fortran_MODULE_DIRECTORY "${module_dir}")
+
+set(module_dir "${PROJECT_BINARY_DIR}/include_4")
+set_target_properties(${lib_name} PROPERTIES Fortran_MODULE_DIRECTORY ${module_dir})
 
 target_include_directories(${lib_name} PUBLIC
   $<BUILD_INTERFACE:${module_dir}>
@@ -58,3 +58,4 @@ install(TARGETS ${lib_name}
   ARCHIVE DESTINATION lib) 
 install(DIRECTORY ${module_dir} DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(EXPORT ${PROJECT_NAME}-config DESTINATION ${CMAKE_INSTALL_PREFIX})
+
