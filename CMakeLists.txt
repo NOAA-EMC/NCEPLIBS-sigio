@@ -32,7 +32,7 @@ set(fortran_src src/sigio_module.f src/sigio_r_module.f)
 
 set(lib_name ${PROJECT_NAME}_4)
 set(versioned_lib_name ${PROJECT_NAME}_v${PROJECT_VERSION}_4)
-set(module_dir "${PROJECT_BINARY_DIR}/include_4")
+set(module_dir "${CMAKE_CURRENT_BINARY_DIR}/include_4")
 
 add_library(${lib_name} STATIC ${fortran_src})
 set_target_properties(${lib_name} PROPERTIES OUTPUT_NAME ${versioned_lib_name})
