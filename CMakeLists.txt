@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
+
+file(STRINGS "VERSION" pVersion)
+
 project(
   sigio
-  VERSION 2.1.0
+  VERSION ${pVersion}
   LANGUAGES Fortran)
 
 if(NOT CMAKE_BUILD_TYPE MATCHES "^(Debug|Release|RelWithDebInfo|MinSizeRel)$")
@@ -20,12 +23,13 @@ endif()
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES "^(Intel)$")
   set(CMAKE_Fortran_FLAGS
-      "-O2 -g -xHOST -traceback -free -convert big_endian -assume byterecl")
-  set(CMAKE_Fortran_FLAGS_DEBUG "-g")
+      "-g -xHOST -traceback -free -convert big_endian -assume byterecl")
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O2")
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
   set(CMAKE_Fortran_FLAGS
-      "-O2 -ggdb -fbacktrace -ffree-form -fconvert=big-endian -funroll-loops")
-  set(CMAKE_Fortran_FLAGS_DEBUG "-g -Wall")
+      "-g -fbacktrace -ffree-form -fconvert=big-endian -funroll-loops")
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O2")
+  set(CMAKE_Fortran_FLAGS_DEBUG "-ggdb -Wall")
 endif()
 
 set(fortran_src src/sigio_module.f src/sigio_r_module.f)
