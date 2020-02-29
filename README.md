@@ -1,11 +1,13 @@
 # SIGIO
 
-Does something with Spectral Coefficients!
+Utilities for Spectral Coefficients
+
+Code Manager: George Vandenberghe
 
 
 ### Prerequisites
 
-Compilers: GNU | Intel | Clang | AppleClang | PGI
+Compilers: GNU | Intel | Clang | AppleClang 
 
 
 ### Installing
@@ -20,7 +22,7 @@ make install
 
 
 ### Version
-2.1.0
+2.2.0
 
 
 ### Authors
