@@ -1,6 +1,6 @@
 # SIGIO
 
-Utilities for Spectral Coefficients
+API to perform I/O from the spectral GFS model
 
 Code Manager: George Vandenberghe
 
