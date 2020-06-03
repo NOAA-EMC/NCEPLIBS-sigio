@@ -38,7 +38,7 @@ jobs:
       with:
         repository: NOAA-EMC/NCEPLIBS-bacio
         path: bacio
-        ref: release/public-v1
+        ref: develop
 
     - name: cache-bacio
       id: cache-bacio
