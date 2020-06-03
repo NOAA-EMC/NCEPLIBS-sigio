@@ -7,6 +7,25 @@ project(
   VERSION ${pVersion}
   LANGUAGES Fortran)
 
+include(GNUInstallDirs)
+
+### Configuration options
+option(BUILD_STATIC_LIBS "Build static libraries" ON)
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+option(ENABLE_TESTS "Build pfunit tests?" OFF)
+
+find_package(bacio REQUIRED)
+
+# Ensure at least one of BUILD_SHARED_LIBS and BUILD_STATIC_LIBS is set
+if(NOT (BUILD_STATIC_LIBS OR BUILD_SHARED_LIBS))
+  message(WARNING "Niether BUILD_STATIC_LIBS nor BUILD_SHARED_LIBS is set.  Defaulting to BUILD_STATIC_LIBS=ON")
+  set(BUILD_STATIC_LIBS ON CACHE BOOL "[FORCE ENABLED] Build static libraries" FORCE)
+  set(BUILD_STATIC_LIBS ON)
+endif()
+
+message(STATUS "Option: BUILD_STATIC_LIBS: ${BUILD_STATIC_LIBS}")
+message(STATUS "Option: BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
+
 if(NOT CMAKE_BUILD_TYPE MATCHES "^(Debug|Release|RelWithDebInfo|MinSizeRel)$")
   message(STATUS "Setting build type to 'Release' as none was specified.")
   set(CMAKE_BUILD_TYPE
@@ -21,38 +40,10 @@ if(NOT CMAKE_Fortran_COMPILER_ID MATCHES "^(Intel|GNU|Clang|AppleClang)$")
     WARNING "Compiler not officially supported: ${CMAKE_Fortran_COMPILER_ID}")
 endif()
 
-if(CMAKE_Fortran_COMPILER_ID MATCHES "^(Intel)$")
-  set(CMAKE_Fortran_FLAGS
-      "-g -xHOST -traceback -free -convert big_endian -assume byterecl")
-  set(CMAKE_Fortran_FLAGS_RELEASE "-O2")
-elseif(CMAKE_Fortran_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
-  set(CMAKE_Fortran_FLAGS
-      "-g -fbacktrace -ffree-form -fconvert=big-endian -funroll-loops")
-  set(CMAKE_Fortran_FLAGS_RELEASE "-O2")
-  set(CMAKE_Fortran_FLAGS_DEBUG "-ggdb -Wall")
+add_subdirectory(src)
+
+if(ENABLE_TESTS)
+  find_package(PFUNIT REQUIRED)
+  enable_testing()
+  add_subdirectory(tests)
 endif()
-
-set(fortran_src src/sigio_module.f src/sigio_r_module.f)
-
-set(lib_name ${PROJECT_NAME}_4)
-set(versioned_lib_name ${PROJECT_NAME}_v${PROJECT_VERSION}_4)
-set(module_dir "${CMAKE_CURRENT_BINARY_DIR}/include_4")
-
-add_library(${lib_name} STATIC ${fortran_src})
-set_target_properties(${lib_name} PROPERTIES OUTPUT_NAME ${versioned_lib_name})
-set_target_properties(${lib_name} PROPERTIES Fortran_MODULE_DIRECTORY
-                                             ${module_dir})
-target_include_directories(
-  ${lib_name} PUBLIC $<BUILD_INTERFACE:${module_dir}>
-                     $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include_4>)
-
-install(
-  TARGETS ${lib_name}
-  EXPORT ${PROJECT_NAME}-config
-  RUNTIME DESTINATION bin
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib)
-install(DIRECTORY ${module_dir} DESTINATION ${CMAKE_INSTALL_PREFIX})
-
-install(EXPORT ${PROJECT_NAME}-config
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME})
