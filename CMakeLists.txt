@@ -9,30 +9,14 @@ project(
 
 include(GNUInstallDirs)
 
-### Configuration options
-option(BUILD_STATIC_LIBS "Build static libraries" ON)
-option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(ENABLE_TESTS "Build pfunit tests?" OFF)
-
-find_package(bacio REQUIRED)
-
-# Ensure at least one of BUILD_SHARED_LIBS and BUILD_STATIC_LIBS is set
-if(NOT (BUILD_STATIC_LIBS OR BUILD_SHARED_LIBS))
-  message(WARNING "Niether BUILD_STATIC_LIBS nor BUILD_SHARED_LIBS is set.  Defaulting to BUILD_STATIC_LIBS=ON")
-  set(BUILD_STATIC_LIBS ON CACHE BOOL "[FORCE ENABLED] Build static libraries" FORCE)
-  set(BUILD_STATIC_LIBS ON)
-endif()
-
-message(STATUS "Option: BUILD_STATIC_LIBS: ${BUILD_STATIC_LIBS}")
-message(STATUS "Option: BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 
 if(NOT CMAKE_BUILD_TYPE MATCHES "^(Debug|Release|RelWithDebInfo|MinSizeRel)$")
   message(STATUS "Setting build type to 'Release' as none was specified.")
   set(CMAKE_BUILD_TYPE
-      "Release"
-      CACHE STRING "Choose the type of build." FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-                                               "MinSizeRel" "RelWithDebInfo")
+    "Release"
+    CACHE STRING "Choose the type of build." FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
 if(NOT CMAKE_Fortran_COMPILER_ID MATCHES "^(Intel|GNU|Clang|AppleClang)$")

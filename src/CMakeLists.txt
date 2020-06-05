@@ -10,39 +10,21 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
 endif()
 
 set(fortran_src sigio_module.f sigio_r_module.f)
+set(kind 4)
 
 set(lib_name ${PROJECT_NAME}_4)
-set(versioned_lib_name ${PROJECT_NAME}_v${PROJECT_VERSION}_4)
 set(module_dir "${CMAKE_CURRENT_BINARY_DIR}/include_4")
 
-add_library(${lib_name}_f OBJECT ${fortran_src})
-set_target_properties(${lib_name}_f PROPERTIES COMPILE_FLAGS
+add_library(${lib_name} STATIC ${fortran_src})
+set_target_properties(${lib_name} PROPERTIES COMPILE_FLAGS
   "${fortran_${kind}_flags}")
-set_target_properties(${lib_name}_f PROPERTIES Fortran_MODULE_DIRECTORY
+set_target_properties(${lib_name} PROPERTIES Fortran_MODULE_DIRECTORY
   ${module_dir})
 
-if(BUILD_STATIC_LIBS)
-  add_library(${lib_name}_static STATIC $<TARGET_OBJECTS:${lib_name}_f>)
-  set_target_properties(${lib_name}_static PROPERTIES OUTPUT_NAME
-    ${versioned_lib_name})
-  target_include_directories(${lib_name}_static INTERFACE
-    $<BUILD_INTERFACE:${module_dir}>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include_${kind}>)
-  target_link_libraries(${lib_name}_static bacio::bacio_4_static)
-  list(APPEND LIB_TARGETS ${lib_name}_static)
-endif()
-
-if(BUILD_SHARED_LIBS)
-  add_library(${lib_name}_shared SHARED $<TARGET_OBJECTS:${lib_name}_f>)
-  set_target_properties(${lib_name}_shared PROPERTIES OUTPUT_NAME
-    ${versioned_lib_name})
-  target_include_directories(${lib_name}_shared INTERFACE
-    $<BUILD_INTERFACE:${module_dir}>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include_${kind}>)
-  target_link_libraries(${lib_name}_shared bacio::bacio_4_shared)
-  list(APPEND LIB_TARGETS ${lib_name}_shared)
-endif()
-
+target_include_directories(${lib_name} INTERFACE
+  $<BUILD_INTERFACE:${module_dir}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include_${kind}>)
+list(APPEND LIB_TARGETS ${lib_name})
 install(DIRECTORY ${module_dir} DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 install(
