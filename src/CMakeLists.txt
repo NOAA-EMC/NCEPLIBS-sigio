@@ -11,8 +11,8 @@ endif()
 
 set(fortran_src sigio_module.f sigio_r_module.f)
 
-set(lib_name ${PROJECT_NAME}_4)
-set(module_dir "${CMAKE_CURRENT_BINARY_DIR}/include_4")
+set(lib_name ${PROJECT_NAME})
+set(module_dir "${CMAKE_CURRENT_BINARY_DIR}/include")
 
 add_library(${lib_name} STATIC ${fortran_src})
 set_target_properties(${lib_name} PROPERTIES Fortran_MODULE_DIRECTORY
@@ -20,7 +20,7 @@ set_target_properties(${lib_name} PROPERTIES Fortran_MODULE_DIRECTORY
 
 target_include_directories(${lib_name} INTERFACE
   $<BUILD_INTERFACE:${module_dir}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include_4>)
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>)
 list(APPEND LIB_TARGETS ${lib_name})
 install(DIRECTORY ${module_dir} DESTINATION ${CMAKE_INSTALL_PREFIX})
 
