@@ -20,7 +20,7 @@ set_target_properties(${lib_name} PROPERTIES Fortran_MODULE_DIRECTORY
 
 target_include_directories(${lib_name} INTERFACE
   $<BUILD_INTERFACE:${module_dir}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>)
+  $<INSTALL_INTERFACE:include>)
 list(APPEND LIB_TARGETS ${lib_name})
 install(DIRECTORY ${module_dir} DESTINATION ${CMAKE_INSTALL_PREFIX})
 
