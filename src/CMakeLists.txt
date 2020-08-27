@@ -11,7 +11,7 @@ endif()
 
 if(${CMAKE_Fortran_COMPILER_ID} MATCHES "^(GNU)$" AND ${CMAKE_Fortran_COMPILER_VERSION} VERSION_GREATER_EQUAL 10)
    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -w -fallow-argument-mismatch -fallow-invalid-boz")
- endif()
+endif()
 
 set(fortran_src sigio_module.f sigio_r_module.f)
 
