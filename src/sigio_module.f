@@ -1,3 +1,5 @@
+!> @file
+      
 !-------------------------------------------------------------------------------
 module sigio_module
 !$$$  Module Documentation Block

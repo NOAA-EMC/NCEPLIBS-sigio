@@ -1,324 +1,315 @@
-!-------------------------------------------------------------------------------
+!> @file
+!> API for global spectral sigma file random I/O
+!> @author Iredell @date 1999-01-18
+!>
+!> This module provides an Application Program Interface extension
+!> for performing I/O on the sigma restart file of the global spectral model.
+!> Functions include opening, reading, writing, and closing as well as
+!> allocating and deallocating data buffers used in the transfers.
+!> The I/O performed here is random.
+!> The transfers are limited to header records, data records,
+!> surface data records, or specific levels of upper air data records.
+!> See the documentation for sigio_module for sequential I/O.
+!>   
+!> ### Modules Used:
+!> -  sigio_module     API for global spectral sigma file I/O
+!>
+!> ### Public Defined Types:
+!>  - sigio_dats       Sigma file surface data fields
+!>   -  hs                Real(sigio_realkind)(:) pointer to spectral
+!>                       coefficients of surface height in m
+!>   -  ps                Real(sigio_realkind)(:) pointer to spectral
+!>                       coefficients of log of surface pressure over 1 kPa
+!>
+!>  - sigio_datm       Sigma file multilevel data fields
+!>   -  k1                Integer(sigio_intkind) first level number
+!>   -  k2                Integer(sigio_intkind) last level number
+!>   -  t                 Real(sigio_realkind)(:,:) pointer to spectral
+!>                       coefficients of virtual temperature by level in K
+!>   -  d                 Real(sigio_realkind)(:,:) pointer to spectral
+!>                       coefficients of divergence by level in 1/second
+!>   -  z                 Real(sigio_realkind)(:,:) pointer to spectral
+!>                       coefficients of vorticity by level in 1/second
+!>   -  q                 Real(sigio_realkind)(:,:,:) pointer to spectral
+!>                       coefficients of tracers by tracer number and level
+!>                       in specific densities
+!>
+!>  - sigio_dati       Sigma file single data field
+!>    - i                 Integer(sigio_intkind) record index
+!>    - f                 Real(sigio_realkind)(:) pointer to field
+!>                       
+!>  - sigio_dbts       Sigma file longreal surface data fields
+!>    - hs                Real(sigio_dblekind)(:) pointer to spectral
+!>                       coefficients of surface height in m
+!>    - ps                Real(sigio_dblekind)(:) pointer to spectral
+!>                       coefficients of log of surface pressure over 1 kPa
+!>
+!>  - sigio_dbtm       Sigma file longreal multilevel data fields
+!>    - k1                Integer(sigio_intkind) first level number
+!>    - k2                Integer(sigio_intkind) last level number
+!>    - t                 Real(sigio_dblekind)(:,:) pointer to spectral
+!>                       coefficients of virtual temperature by level in K
+!>    - d                 Real(sigio_dblekind)(:,:) pointer to spectral
+!>                       coefficients of divergence by level in 1/second
+!>    - z                 Real(sigio_dblekind)(:,:) pointer to spectral
+!>                       coefficients of vorticity by level in 1/second
+!>    - q                 Real(sigio_dblekind)(:,:,:) pointer to spectral
+!>                       coefficients of tracers by tracer number and level
+!>                       in specific densities
+!>
+!>  - sigio_dbti       Sigma file longreal single data field
+!>     - i                 Integer(sigio_intkind) record index
+!>     - f                 Real(sigio_dblekind)(:) pointer to field
+!>                       
+!> ### Public Subprograms:
+!>   - sigio_rropen     Open sigma file for random reading
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - cfname            Character(*) input filename
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rwopen     Open sigma file for random writing
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - cfname            Character(*) input filename
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rxopen     Open sigma file for random reading and writing
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - cfname            Character(*) input filename
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rclose     Close sigma file for random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rrhead     Read header information with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) output header information
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rwhead     Write header information with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_aldats     Allocate surface data fields
+!>     - head              Type(sigio_head) input header information
+!>     - dats              Type(sigio_dats) output surface data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_axdats     Deallocate surface data fields
+!>     - dats              Type(sigio_dats) output surface data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_aldatm     Allocate multilevel data fields
+!>     - head              Type(sigio_head) input header information
+!>     - k1                Integer(sigio_intkind) input first level number
+!>     - k2                Integer(sigio_intkind) input last level number
+!>     - datm              Type(sigio_datm) output multilevel data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_axdatm     Deallocate multilevel data fields
+!>     - datm              Type(sigio_datm) output multilevel data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_aldati     Allocate single data fields
+!>     - head              Type(sigio_head) input header information
+!>     - i                 Integer(sigio_intkind) input record index
+!>     - dati              Type(sigio_dati) output single data field
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_axdati     Deallocate single data fields
+!>     - dati              Type(sigio_dati) output single data field
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rrdata     Read data fields with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - data              Type(sigio_data) output data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rwdata     Write data fields with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - data              Type(sigio_data) input data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rrohdc     Open, read header & data and close with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - cfname            Character(*) input filename
+!>     - head              Type(sigio_head) output header information
+!>     - data              Type(sigio_data) or type(sigio_dbta) output data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rwohdc     Open, write header & data and close with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - cfname            Character(*) input filename
+!>     - head              Type(sigio_head) input header information
+!>     - data              Type(sigio_data) or type(sigio_dbta) input data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rrdats     Read surface data fields with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - dats              Type(sigio_dats) output surface data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rwdats     Write surface data fields with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - dats              Type(sigio_dats) input surface data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rrdatm     Read multilevel data fields with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - datm              Type(sigio_datm) output multilevel data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rwdatm     Write multilevel data fields with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - datm              Type(sigio_datm) input multilevel data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rrdati     Read single data field with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - dati              Type(sigio_dati) output single data field
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rwdati     Write single data field with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - dati              Type(sigio_dati) input single data field
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_aldbts     Allocate longreal surface data fields
+!>     - head              Type(sigio_head) input header information
+!>     - dbts              Type(sigio_dbts) output longreal surface data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_axdbts     Deallocate longreal surface data fields
+!>     - dbts              Type(sigio_dbts) output longreal surface data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_aldbtm     Allocate longreal multilevel data fields
+!>     - head              Type(sigio_head) input header information
+!>     - k                 Integer(sigio_intkind) input level number
+!>     - dbtm              Type(sigio_dbtm) output longreal multilevel data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_axdbtm     Deallocate longreal multilevel data fields
+!>     - dbtm              Type(sigio_dbtm) output longreal multilevel data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_aldbti     Allocate longreal single data fields
+!>     - head              Type(sigio_head) input header information
+!>     - i                 Integer(sigio_intkind) input record index
+!>     - dbti              Type(sigio_dbti) output longreal single data field
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_axdbti     Deallocate longreal single data fields
+!>     - dbti              Type(sigio_dbti) output longreal single data field
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rrdbta     Read longreal data fields with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - dbta              Type(sigio_dbta) output longreal data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rwdbta     Write longreal data fields with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - dbta              Type(sigio_dbta) input longreal data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rrdbts     Read longreal surface data fields with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - dbts              Type(sigio_dbts) output longreal surface data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rwdbts     Write longreal surface data fields with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - dbts              Type(sigio_dbts) input longreal surface data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rrdbtm     Read longreal multilevel data fields with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - dbtm              Type(sigio_dbtm) output longreal multilevel data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rwdbtm     Write longreal multilevel data fields with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - dbtm              Type(sigio_dbtm) input longreal multilevel data fields
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rrdbti     Read longreal single data field with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - dbti              Type(sigio_dbti) output longreal single data field
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!>   - sigio_rwdbti     Write longreal single data field with random I/O
+!>     - lu                Integer(sigio_intkind) input logical unit
+!>     - head              Type(sigio_head) input header information
+!>     - dbti              Type(sigio_dbti) input longreal single data field
+!>     - iret              Integer(sigio_intkind) output return code
+!>
+!> ### Subprograms called:
+!> Subprogram        | Purpose
+!> ------------------|--------      
+!> baopenr()         |  Byte-addressable open for reading
+!> baopenw()         |  Byte-addressable open for writing
+!> baclose()         |  Byte-addressable close
+!> bafrindexl()      |  Byte-addressable Fortran record index
+!> bafrreadl()       |  Byte-addressable Fortran record read
+!> bafrwritel()      |  Byte-addressable Fortran record write
+!>
+!> Remarks:
+!>   (1) The sigma file format follows:
+!>         ON85 label (32 bytes)
+!>         Header information record containing
+!>           real forecast hour, initial date, sigma interfaces, sigma levels,
+!>           padding to allow for 100 levels, and finally 44 identifier words
+!>           containing JCAP, LEVS, NTRAC, etc. (250 4-byte words)
+!>         Orography (NC 4-byte words, where NC=(JCAP+1)*(JCAP+2))
+!>         Log surface pressure (NC 4-byte words)
+!>         Temperature (LEVS records of NC 4-byte words)
+!>         Divergence & Vorticity interleaved (2*LEVS records of NC 4-byte words)
+!>         Tracers (LEVS*NTRAC records of NC 4-byte words)
+!>
+!>   (2) Possible return codes:
+!>      -    0   Successful call
+!>      -   -1   Open or close I/O error
+!>      -   -2   Header record I/O error (possible EOF)
+!>      -   -3   Allocation or deallocation error
+!>      -   -4   Data record I/O error
+!>      -   -5   Insufficient data dimensions allocated
+!>
+!> Examples:
+!>   (1) Write out orography and surface pressure only from processor 0:
+!> <pre>
+!>     subroutine write_surface_fields(me,head,len,orog,lnps)
+!>     use sigio_r_module
+!>     integer,intent(in):: me
+!>     type(sigio_head),intent(in):: head
+!>     integer,intent(in):: len
+!>     real(sigio_dblekind),intent(in),target:: orog(len),lnps(len)
+!>     type(sigio_dbts) dbts
+!>     integer iret
+!>     if(me.eq.0) then
+!>       dbts%hs=>orog
+!>       dbts%ps=>lnps
+!>       call sigio_rwdbts(51,head,dbts,iret)
+!>     endif
+!>     end subroutine
+!> </pre>
 module sigio_r_module
-!$$$  Module Documentation Block
-!
-! Module:    sigio_r_module  API for global spectral sigma file random I/O
-!   Prgmmr: Iredell          Org: W/NX23     Date: 1999-01-18
-!
-! Abstract: This module provides an Application Program Interface extension
-!   for performing I/O on the sigma restart file of the global spectral model.
-!   Functions include opening, reading, writing, and closing as well as
-!   allocating and deallocating data buffers used in the transfers.
-!   The I/O performed here is random.
-!   The transfers are limited to header records, data records,
-!   surface data records, or specific levels of upper air data records.
-!   See the documentation for sigio_module for sequential I/O.
-!   
-! Program History Log:
-!   1999-01-18  Mark Iredell
-!
-! Modules Used:
-!   sigio_module     API for global spectral sigma file I/O
-!
-! Public Variables:
-!
-! Public Defined Types:
-!   sigio_dats       Sigma file surface data fields
-!     hs                Real(sigio_realkind)(:) pointer to spectral
-!                       coefficients of surface height in m
-!     ps                Real(sigio_realkind)(:) pointer to spectral
-!                       coefficients of log of surface pressure over 1 kPa
-!
-!   sigio_datm       Sigma file multilevel data fields
-!     k1                Integer(sigio_intkind) first level number
-!     k2                Integer(sigio_intkind) last level number
-!     t                 Real(sigio_realkind)(:,:) pointer to spectral
-!                       coefficients of virtual temperature by level in K
-!     d                 Real(sigio_realkind)(:,:) pointer to spectral
-!                       coefficients of divergence by level in 1/second
-!     z                 Real(sigio_realkind)(:,:) pointer to spectral
-!                       coefficients of vorticity by level in 1/second
-!     q                 Real(sigio_realkind)(:,:,:) pointer to spectral
-!                       coefficients of tracers by tracer number and level
-!                       in specific densities
-!
-!   sigio_dati       Sigma file single data field
-!     i                 Integer(sigio_intkind) record index
-!     f                 Real(sigio_realkind)(:) pointer to field
-!                       
-!   sigio_dbts       Sigma file longreal surface data fields
-!     hs                Real(sigio_dblekind)(:) pointer to spectral
-!                       coefficients of surface height in m
-!     ps                Real(sigio_dblekind)(:) pointer to spectral
-!                       coefficients of log of surface pressure over 1 kPa
-!
-!   sigio_dbtm       Sigma file longreal multilevel data fields
-!     k1                Integer(sigio_intkind) first level number
-!     k2                Integer(sigio_intkind) last level number
-!     t                 Real(sigio_dblekind)(:,:) pointer to spectral
-!                       coefficients of virtual temperature by level in K
-!     d                 Real(sigio_dblekind)(:,:) pointer to spectral
-!                       coefficients of divergence by level in 1/second
-!     z                 Real(sigio_dblekind)(:,:) pointer to spectral
-!                       coefficients of vorticity by level in 1/second
-!     q                 Real(sigio_dblekind)(:,:,:) pointer to spectral
-!                       coefficients of tracers by tracer number and level
-!                       in specific densities
-!
-!   sigio_dbti       Sigma file longreal single data field
-!     i                 Integer(sigio_intkind) record index
-!     f                 Real(sigio_dblekind)(:) pointer to field
-!                       
-! Public Subprograms:
-!   sigio_rropen     Open sigma file for random reading
-!     lu                Integer(sigio_intkind) input logical unit
-!     cfname            Character(*) input filename
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rwopen     Open sigma file for random writing
-!     lu                Integer(sigio_intkind) input logical unit
-!     cfname            Character(*) input filename
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rxopen     Open sigma file for random reading and writing
-!     lu                Integer(sigio_intkind) input logical unit
-!     cfname            Character(*) input filename
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rclose     Close sigma file for random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rrhead     Read header information with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) output header information
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rwhead     Write header information with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_aldats     Allocate surface data fields
-!     head              Type(sigio_head) input header information
-!     dats              Type(sigio_dats) output surface data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_axdats     Deallocate surface data fields
-!     dats              Type(sigio_dats) output surface data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_aldatm     Allocate multilevel data fields
-!     head              Type(sigio_head) input header information
-!     k1                Integer(sigio_intkind) input first level number
-!     k2                Integer(sigio_intkind) input last level number
-!     datm              Type(sigio_datm) output multilevel data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_axdatm     Deallocate multilevel data fields
-!     datm              Type(sigio_datm) output multilevel data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_aldati     Allocate single data fields
-!     head              Type(sigio_head) input header information
-!     i                 Integer(sigio_intkind) input record index
-!     dati              Type(sigio_dati) output single data field
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_axdati     Deallocate single data fields
-!     dati              Type(sigio_dati) output single data field
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rrdata     Read data fields with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     data              Type(sigio_data) output data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rwdata     Write data fields with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     data              Type(sigio_data) input data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rrohdc     Open, read header & data and close with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     cfname            Character(*) input filename
-!     head              Type(sigio_head) output header information
-!     data              Type(sigio_data) or type(sigio_dbta) output data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rwohdc     Open, write header & data and close with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     cfname            Character(*) input filename
-!     head              Type(sigio_head) input header information
-!     data              Type(sigio_data) or type(sigio_dbta) input data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rrdats     Read surface data fields with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dats              Type(sigio_dats) output surface data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rwdats     Write surface data fields with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dats              Type(sigio_dats) input surface data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rrdatm     Read multilevel data fields with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     datm              Type(sigio_datm) output multilevel data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rwdatm     Write multilevel data fields with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     datm              Type(sigio_datm) input multilevel data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rrdati     Read single data field with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dati              Type(sigio_dati) output single data field
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rwdati     Write single data field with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dati              Type(sigio_dati) input single data field
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_aldbts     Allocate longreal surface data fields
-!     head              Type(sigio_head) input header information
-!     dbts              Type(sigio_dbts) output longreal surface data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_axdbts     Deallocate longreal surface data fields
-!     dbts              Type(sigio_dbts) output longreal surface data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_aldbtm     Allocate longreal multilevel data fields
-!     head              Type(sigio_head) input header information
-!     k                 Integer(sigio_intkind) input level number
-!     dbtm              Type(sigio_dbtm) output longreal multilevel data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_axdbtm     Deallocate longreal multilevel data fields
-!     dbtm              Type(sigio_dbtm) output longreal multilevel data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_aldbti     Allocate longreal single data fields
-!     head              Type(sigio_head) input header information
-!     i                 Integer(sigio_intkind) input record index
-!     dbti              Type(sigio_dbti) output longreal single data field
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_axdbti     Deallocate longreal single data fields
-!     dbti              Type(sigio_dbti) output longreal single data field
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rrdbta     Read longreal data fields with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dbta              Type(sigio_dbta) output longreal data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rwdbta     Write longreal data fields with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dbta              Type(sigio_dbta) input longreal data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rrdbts     Read longreal surface data fields with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dbts              Type(sigio_dbts) output longreal surface data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rwdbts     Write longreal surface data fields with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dbts              Type(sigio_dbts) input longreal surface data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rrdbtm     Read longreal multilevel data fields with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dbtm              Type(sigio_dbtm) output longreal multilevel data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rwdbtm     Write longreal multilevel data fields with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dbtm              Type(sigio_dbtm) input longreal multilevel data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rrdbti     Read longreal single data field with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dbti              Type(sigio_dbti) output longreal single data field
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_rwdbti     Write longreal single data field with random I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dbti              Type(sigio_dbti) input longreal single data field
-!     iret              Integer(sigio_intkind) output return code
-!
-! Subprograms called:
-!   baopenr           Byte-addressable open for reading
-!   baopenw           Byte-addressable open for writing
-!   baclose           Byte-addressable close
-!   bafrindexl        Byte-addressable Fortran record index
-!   bafrreadl         Byte-addressable Fortran record read
-!   bafrwritel        Byte-addressable Fortran record write
-!
-! Remarks:
-!   (1) The sigma file format follows:
-!         ON85 label (32 bytes)
-!         Header information record containing
-!           real forecast hour, initial date, sigma interfaces, sigma levels,
-!           padding to allow for 100 levels, and finally 44 identifier words
-!           containing JCAP, LEVS, NTRAC, etc. (250 4-byte words)
-!         Orography (NC 4-byte words, where NC=(JCAP+1)*(JCAP+2))
-!         Log surface pressure (NC 4-byte words)
-!         Temperature (LEVS records of NC 4-byte words)
-!         Divergence & Vorticity interleaved (2*LEVS records of NC 4-byte words)
-!         Tracers (LEVS*NTRAC records of NC 4-byte words)
-!
-!   (2) Possible return codes:
-!          0   Successful call
-!         -1   Open or close I/O error
-!         -2   Header record I/O error (possible EOF)
-!         -3   Allocation or deallocation error
-!         -4   Data record I/O error
-!         -5   Insufficient data dimensions allocated
-!
-! Examples:
-!   (1) Write out orography and surface pressure only from processor 0:
-!
-!     subroutine write_surface_fields(me,head,len,orog,lnps)
-!     use sigio_r_module
-!     integer,intent(in):: me
-!     type(sigio_head),intent(in):: head
-!     integer,intent(in):: len
-!     real(sigio_dblekind),intent(in),target:: orog(len),lnps(len)
-!     type(sigio_dbts) dbts
-!     integer iret
-!     if(me.eq.0) then
-!       dbts%hs=>orog
-!       dbts%ps=>lnps
-!       call sigio_rwdbts(51,head,dbts,iret)
-!     endif
-!     end subroutine
-! 
-! Attributes:
-!   Language: Fortran 90
-!
-!$$$
   use sigio_module
   implicit none
   private
