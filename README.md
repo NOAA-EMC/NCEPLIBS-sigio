@@ -14,11 +14,16 @@ project.
 
 For full documentation see https://noaa-emc.github.io/NCEPLIBS-sigio/.
 
-### Authors
+## Authors
 
 NCEP/EMC developers.
 
 Code Manager: Kyle Gerheiser
+
+## Prerequisites
+
+This package requires the
+[NCEPLIBS-bacio](https://github.com/NOAA-EMC/NCEPLIBS-bacio) library.
 
 ## Installing
 
