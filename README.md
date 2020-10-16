@@ -18,7 +18,7 @@ For full documentation see https://noaa-emc.github.io/NCEPLIBS-sigio/.
 
 NCEP/EMC developers.
 
-Code Manager: 
+Code Manager: Kyle Gerheiser
 
 ## Installing
 
