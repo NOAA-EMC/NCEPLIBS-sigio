@@ -12,6 +12,8 @@ data records.
 This is part of the [NCEPLIBS](https://github.com/NOAA-EMC/NCEPLIBS)
 project.
 
+For full documentation see https://noaa-emc.github.io/NCEPLIBS-sigio/.
+
 ### Authors
 
 NCEP/EMC developers.
