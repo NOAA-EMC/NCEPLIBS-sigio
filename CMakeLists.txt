@@ -1,5 +1,9 @@
+# This is the main CMake file for NCEPLIBS-sigio.
+#
+# Mark Potts, Kyle Gerheiser, Ed Hartnett
 cmake_minimum_required(VERSION 3.15)
 
+# Get the version from the VERSION file.
 file(STRINGS "VERSION" pVersion)
 
 project(
@@ -31,3 +35,10 @@ if(ENABLE_TESTS)
   enable_testing()
   add_subdirectory(tests)
 endif()
+
+# Determine whether or not to generate documentation.
+OPTION(ENABLE_DOCS "Enable generation of doxygen-based documentation." OFF)
+IF(ENABLE_DOCS)
+  FIND_PACKAGE(Doxygen REQUIRED)
+ENDIF()
+ADD_SUBDIRECTORY(docs)  

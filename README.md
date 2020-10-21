@@ -12,11 +12,13 @@ data records.
 This is part of the [NCEPLIBS](https://github.com/NOAA-EMC/NCEPLIBS)
 project.
 
-### Authors
+For full documentation see https://noaa-emc.github.io/NCEPLIBS-sigio/.
+
+## Authors
 
 NCEP/EMC developers.
 
-Code Manager: 
+Code Manager: Kyle Gerheiser
 
 ## Installing
 

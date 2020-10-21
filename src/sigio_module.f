@@ -1,364 +1,343 @@
-!-------------------------------------------------------------------------------
+!> @file
+!> API for global spectral sigma file I/O
+!> @author iredell @date 1999-01-18
+!>
+!> This module provides an Application Program Interface
+!> for performing I/O on the sigma restart file of the global spectral model.
+!> Functions include opening, reading, writing, and closing as well as
+!> allocating and deallocating data buffers used in the transfers.
+!> The I/O performed here is sequential.
+!> The transfers are limited to header records or data records.
+!>   
+!> ### Program History Log:
+!> -  1999-01-18  Mark Iredell
+!> -  2013-10-14  Fanglin Yang: Added dynamics restart fields (ixga etc)
+!>                 and restructureed physics restart fields (ixgr etc).
+!> -  2018-05-11  Mark Iredell: Added error check for NEMSIO file.
+!>
+!> ### Public Variables:
+!>  variable        | notes
+!> -----------------|------      
+!>   sigio_lhead1   |   Integer parameter length of first header record (=32)
+!>   sigio_charkind |   Integer parameter kind or length of passed characters (=8)
+!>   sigio_intkind  |   Integer parameter kind or length of passed integers (=4)
+!>   sigio_realkind |   Integer parameter kind or length of passed reals (=4)
+!>   sigio_dblekind |   Integer parameter kind or length of passed longreals (=8)
+!>   sigio_realfill |   Real(sigio_realkind) parameter fill value (=-9999.)
+!>   sigio_dblefill |   Real(sigio_dblekind) parameter fill value (=-9999.)
+!>
+!> ### Public Defined Types:
+!> sigio_head | Type                    | Sigma file header information
+!> -----------|-------------------------|------------------------------      
+!> clabsig    | Character(sigio_lhead1) | ON85 label (obsolescent)
+!> fhour      | Real(sigio_realkind)    | forecast hour
+!> idate      | Integer(sigio_intkind)(4) |initial date (hour, month, day, 4-digit year)
+!> si         | Real(sigio_realkind)(101) |sigma interfaces (obsolescent)
+!> sl         | Real(sigio_realkind)(100) |sigma levels (obsolescent)
+!> ak         | Real(sigio_realkind)(101) |hybrid interface a (obsolescent)
+!> bk         | Real(sigio_realkind)(101) |hybrid interface b (obsolescent)
+!> jcap       | Integer(sigio_intkind) |spectral truncation
+!> levs       | Integer(sigio_intkind) |number of levels
+!> itrun      | Integer(sigio_intkind) |truncation flag (=1 for triangular)
+!> iorder     | Integer(sigio_intkind) |coefficient order flag (=2 for ibm order)
+!> irealf     | Integer(sigio_intkind) |floating point flag (=1 for 4-byte ieee, =2 for 8-byte ieee)
+!> igen       | Integer(sigio_intkind) |model generating flag
+!> latf       | Integer(sigio_intkind) |latitudes in dynamics (=(jcap+1)*3/2)
+!> lonf       | Integer(sigio_intkind) |longitudes in dynamics (>=(jcap+1)*3 appropriate for fft)
+!> latb       | Integer(sigio_intkind) |latitudes in physics
+!> lonb       | Integer(sigio_intkind) |longitudes in physics
+!> latr       | Integer(sigio_intkind) |latitudes in radiation
+!> lonr       | Integer(sigio_intkind) |longitudes in radiation
+!> ntrac      | Integer(sigio_intkind) |number of tracers
+!> icen2      | Integer(sigio_intkind) |subcenter id
+!> iens       | Integer(sigio_intkind)(2) |ensemble ids
+!> idpp       | Integer(sigio_intkind) |processing id
+!> idsl       | Integer(sigio_intkind) |semi-lagrangian id
+!> idvc       | Integer(sigio_intkind) |vertical coordinate id (=1 for sigma, =2 for ec-hybrid, =3 for ncep hybrid)
+!> idvm       | Integer(sigio_intkind) |mass variable id
+!> idvt       | Integer(sigio_intkind) |tracer variable id
+!> idrun      | Integer(sigio_intkind) |run id
+!> idusr      | Integer(sigio_intkind) |user-defined id
+!> pdryini    | Real(sigio_realkind) |global mean dry air pressure (kPa) (obsolescent)
+!> ncldt      | Integer(sigio_intkind) |number of cloud types
+!> ixgr       | Integer(sigio_intkind) |extra fileds for physics. (see below)
+!> ixga       | Integer(sigio_intkind) |extra fileds for dynamics. (see below)
+!> ivs        | Integer(sigio_intkind) |version number
+!> nvcoord    | Integer(sigio_intkind) |number of vcoord profiles
+!>
+!> #### ixgr  Integer(sigio_intkind) extra fileds for physics.
+!> <pre>
+!> ixgr=00000000  no extra fields                                      
+!> ixgr=0000000a  zhao micro,    a=1: zhao1, two 3d, one 2d, and nxss=0            
+!>                               a=2: zhao2, four 3d, three 2d, and nxss=0            
+!>                               a=3: zhao2, four 3d, three 2d, and nxss=1            
+!> ixgr=000000b0  ferrier micro, b=1: three 3d, one 2d, and nxss=0          
+!>                               ferrier micro, b=2: three 3d, one 2d, and nxss=1           
+!> ixgr=00000c00  c=1, pdf cld, three 3d                      
+!> </pre>
+!>
+!> #### ixga Integer(sigio_intkind) extra fileds for dynamics. 
+!> <pre>
+!> ixga=00000000  no extra fields                                      
+!> ixga=0000000a  zflxtvd micro,   ntrac 3d, zero 2d            
+!> ixga=000000b0  (reserved for) joe-sela semi-lag gfs
+!> </pre>
+!>      
+!> ### The following variables should be allocated with sigio_alhead:
+!>    - vcoord            Real(sigio_realkind)((levs+1),nvcoord) vcoord profiles
+!>    - cfvars            Character(8)(5+ntrac) field variable names
+!> ### The following variables should not be modified by the user:
+!>    - nxgr              Integer(sigio_intkind) number of extra physics grid fields
+!>    - nxss              Integer(sigio_intkind) number of extra scalars
+!>    - nxga              Integer(sigio_intkind) number of extra dynamics grid fields
+!>    - nhead             Integer(sigio_intkind) number of header records
+!>    - ndata             Integer(sigio_intkind) number of data records
+!>    - lhead             Integer(sigio_intkind)(nhead) header record lengths
+!>    - ldata             Integer(sigio_intkind)(ndata) data record lengths
+!>
+!> sigio_data     |   Type                 | Sigma file data fields
+!> ---------------|------------------------|-----------------------      
+!> hs  |     Real(sigio_realkind)(:) |pointer to spectral coefficients of surface height in m
+!> ps  |     Real(sigio_realkind)(:) |pointer to spectral coefficients of log of surface pressure over 1 kPa
+!> t   |     Real(sigio_realkind)(:,:) |pointer to spectral coefficients of virtual temperature by level in K
+!> d   |     Real(sigio_realkind)(:,:) |pointer to spectral coefficients of divergence by level in 1/second
+!> z   |     Real(sigio_realkind)(:,:) |pointer to spectral coefficients of vorticity by level in 1/second
+!> q   |     Real(sigio_realkind)(:,:,:) |pointer to spectral coefficients of tracers by level and tracer number in specific densities
+!> xgr |     Real(sigio_realkind)(:,:,:) |pointer to extra grid fields by longitude, latitude and number of extra physics grid fields
+!> xss |     Real(sigio_realkind)(:) |pointer to scalar array
+!> xga |     Real(sigio_realkind)(:,:,:) |pointer to extra dynamics grid fields by longitude, latitude and number of extra grid fields
+!>                       
+!> sigio_dbta | Type | Sigma file longreal data fields
+!> ---------------|------------------------|-----------------------
+!> hs  | Real(sigio_dblekind)(:) |pointer to spectral coefficients of surface height in m
+!> ps  | Real(sigio_dblekind)(:) |pointer to spectral coefficients of log of surface pressure over 1 kPa
+!> t   | Real(sigio_dblekind)(:,:) |pointer to spectral coefficients of virtual temperature by level in K
+!> d   | Real(sigio_dblekind)(:,:) |pointer to spectral coefficients of divergence by level in 1/second
+!> z   | Real(sigio_dblekind)(:,:) |pointer to spectral coefficients of vorticity by level in 1/second
+!> q   | Real(sigio_dblekind)(:,:,:) |pointer to spectral coefficients of tracers by level and tracer number in specific densities
+!> xgr | Real(sigio_dblekind)(:,:,:) |pointer to extra physics grid fields by longitude, latitude and number of extra grid fields
+!> xss | Real(sigio_dblekind)(:) |pointer to scalar array
+!> xga | Real(sigio_dblekind)(:,:,:) |pointer to extra dynamics grid fields by longitude, latitude and number of extra grid fields
+!>                       
+!> ### Public Subprograms:
+!> <pre>
+!>   sigio_sropen      Open sigma file for sequential reading
+!>     lu                Integer(sigio_intkind) input logical unit
+!>     cfname            Character(*) input filename
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_swopen      Open sigma file for sequential writing
+!>     lu                Integer(sigio_intkind) input logical unit
+!>     cfname            Character(*) input filename
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_sclose      Close sigma file for sequential I/O
+!>     lu                Integer(sigio_intkind) input logical unit
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_srhead      Read header information with sequential I/O
+!>     lu                Integer(sigio_intkind) input logical unit
+!>     head              Type(sigio_head) output header information
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_swhead      Write header information with sequential I/O
+!>     lu                Integer(sigio_intkind) input logical unit
+!>     head              Type(sigio_head) input header information
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_alhead      Allocate head allocatables
+!>     head              Type(sigio_head) input/output header information
+!>     iret              Integer(sigio_intkind) output return code
+!>     levs              Integer(sigio_intkind) optional number of levels
+!>     nvcoord           Integer(sigio_intkind) optional number of vcoords
+!>     ntrac             Integer(sigio_intkind) optional number of tracers
+!>
+!>   sigio_aldata      Allocate data fields
+!>     head              Type(sigio_head) input header information
+!>     data              Type(sigio_data) output data fields
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_axdata      Deallocate data fields
+!>     data              Type(sigio_data) output data fields
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_srdata      Read data fields with sequential I/O
+!>     lu                Integer(sigio_intkind) input logical unit
+!>     head              Type(sigio_head) input header information
+!>     data              Type(sigio_data) output data fields
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_swdata      Write data fields with sequential I/O
+!>     lu                Integer(sigio_intkind) input logical unit
+!>     head              Type(sigio_head) input header information
+!>     data              Type(sigio_data) input data fields
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_aldbta      Allocate longreal data fields
+!>     head              Type(sigio_head) input header information
+!>     dbta              Type(sigio_dbta) output longreal data fields
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_axdbta      Deallocate longreal data fields
+!>     dbta              Type(sigio_dbta) output longreal data fields
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_srdbta      Read longreal data fields with sequential I/O
+!>     lu                Integer(sigio_intkind) input logical unit
+!>     head              Type(sigio_head) input header information
+!>     dbta              Type(sigio_dbta) output longreal data fields
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_swdbta      Write longreal data fields with sequential I/O
+!>     lu                Integer(sigio_intkind) input logical unit
+!>     head              Type(sigio_head) input header information
+!>     dbta              Type(sigio_dbta) input longreal data fields
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_srohdc      Open, read header & data and close with sequential I/O
+!>     lu                Integer(sigio_intkind) input logical unit
+!>     cfname            Character(*) input filename
+!>     head              Type(sigio_head) output header information
+!>     data              Type(sigio_data) or type(sigio_dbta) output data fields
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_swohdc      Open, write header & data and close with sequential I/O
+!>     lu                Integer(sigio_intkind) input logical unit
+!>     cfname            Character(*) input filename
+!>     head              Type(sigio_head) input header information
+!>     data              Type(sigio_data) or type(sigio_dbta) output data fields
+!>     iret              Integer(sigio_intkind) output return code
+!>
+!>   sigio_modpr        Compute model pressures
+!>     im                Integer(sigio_intkind) input number of points
+!>     ix                Integer(sigio_intkind) input first dimension
+!>     km                Integer(sigio_intkind) input number of levels
+!>     nvcoord           Integer(sigio_intkind) input number of vertical coords
+!>     idvc              Integer(sigio_intkind) input vertical coordinate id
+!>                       (1 for sigma and 2 for hybrid)
+!>     idsl              Integer(sigio_intkind) input type of sigma structure
+!>                       (1 for phillips or 2 for mean)
+!>     vcoord            Real(sigio_realkind)(km+1,nvcoord) input vertical coords
+!>                       for idvc=1, nvcoord=1: sigma interface
+!>                       for idvc=2, nvcoord=2: hybrid interface a and b
+!>     iret              Integer(sigio_intkind) output return code
+!>     ps                Real(sigio_realkind)(ix) input optional surface pressure (Pa)
+!>     tv                Real(sigio_realkind)(ix,km) input optional virtual temperature (K)
+!>     pd                Real(sigio_realkind)(ix,km) output optional delta pressure (Pa)
+!>     pm                Real(sigio_realkind)(ix,km) output optional layer pressure (Pa)
+!>
+!>   sigio_modprd      Compute model pressures - double precision
+!>     im                Integer(sigio_intkind) input number of points
+!>     ix                Integer(sigio_intkind) input first dimension
+!>     km                Integer(sigio_intkind) input number of levels
+!>     nvcoord           Integer(sigio_intkind) input number of vertical coords
+!>     idvc              Integer(sigio_intkind) input vertical coordinate id
+!>                       (1 for sigma and 2 for hybrid)
+!>     idsl              Integer(sigio_intkind) input type of sigma structure
+!>                       (1 for phillips or 2 for mean)
+!>     vcoord            Real(sigio_realkind)(km+1,nvcoord) input vertical coords
+!>                       for idvc=1, nvcoord=1: sigma interface
+!>                       for idvc=2, nvcoord=2: hybrid interface a and b
+!>     iret              Integer(sigio_intkind) output return code
+!>     ps                Real(sigio_dblekind)(ix) input optional surface pressure (Pa)
+!>     tv                Real(sigio_dblekind)(ix,km) input optional virtual temperature (K)
+!>     pd                Real(sigio_dblekind)(ix,km) output optional delta pressure (Pa)
+!>     pm                Real(sigio_dblekind)(ix,km) output optional layer pressure (Pa)
+!>
+!>   sigio_adhead        Set private data in header
+!>     head              Type(sigio_head) input/output header information
+!>
+!>   sigio_cnvpsv        Convert from model mass variable to pressure (Pa)
+!>                       when cnflg > 0, or the opposite when cnflag <= 0.
+!>                       Values of IDVM determines variable. 
+!>     im                Integer(sigio_intkind) input number of points
+!>     idvm              Integer(sigio_intkind) mass variable id
+!>     ps                Real(sigio_realkind)(im) inout mass variable or ps (Pa)
+!>     dp                Real(sigio_realkind)(im) output dp(out)/dp(in)
+!>     cnflg             Integer(sigio_intkind) input conversion flag.
+!>                       when >0, conversion is to surface pressure (Pa) and
+!>                       when <= 0, the conversion is to model mass variable.
+!>
+!>   sigio_cnvtdv        Convert from Virtual Temperature (Tv) or Enthalpy (h)
+!>                       to sensible Temperature (when cnflag > 0) and the opposite
+!>                       when cnflag <= 0. Values of IDVM determines Tv or h
+!>     im                Integer(sigio_intkind) input number of points
+!>     ix                Integer(sigio_intkind) input first dimension
+!>     km                Integer(sigio_intkind) input number of levels
+!>     idvc              Integer(sigio_intkind) input vertical coordinate id
+!>                       (1 for sigma, 2 for hybrid, and 3 for general hybrid)
+!>     idvm              Integer(sigio_intkind) mass variable id
+!>                       (32 for enthalpy)
+!>     ntrac             Integer(sigio_intkind) input number of tracers
+!>     iret              Integer(sigio_intkind) output return code
+!>     t                 Real(sigio_realkind)(ix,km) input Tv, h or T
+!>     q                 Real(sigio_realkind)(ix,km,ntrac) input tracers
+!>     cpi               Real(sigio_realkind)(ntrac) input specific heat at constant
+!>                       pressure for tracers
+!>    cnflg              Integer(sigio_intkind) input conversion flag. when >0
+!>                       conversion is to dry temperature from Tv or h and when
+!>                       <= 0, the conversion is from dry temperature to Tv or h.
+!> </pre>
+!>
+!> Remarks:
+!>   (1) The sigma file format follows:
+!>       For ivs=198410:
+!>         ON85 label (32 bytes)
+!>         Header information record containing
+!>           real forecast hour, initial date, sigma interfaces, sigma levels,
+!>           padding to allow for 100 levels, and finally 44 identifier words
+!>           containing JCAP, LEVS, NTRAC, IREALF, etc. (250 4-byte words)
+!>           (word size in the remaining records depends on the value of IREALF)
+!>         Orography (NC words, where NC=(JCAP+1)*(JCAP+2))
+!>         Log surface pressure (NC words)
+!>         Temperature (LEVS records of NC words)
+!>         Divergence & Vorticity interleaved (2*LEVS records of NC words)
+!>         Tracers (LEVS*NTRAC records of NC words)
+!>         Extra grid fields (NXGR records of LONB*LATB words)
+!>       For ivs=200509:
+!>         Label containing
+!>           'GFS ','SIG ',ivs,nhead,ndata,reserved(3) (8 4-byte words)
+!>         Header records
+!>           lhead(nhead),ldata(ndata) (nhead+ndata 4-byte words)
+!>           fhour, idate(4), jcap, levs, itrun, iorder, irealf, igen,
+!>             latf, lonf, latb, lonb, latr, lonr, ntrac, nvcoord, 
+!>             icen2, iens(2), idpp, idsl, idvc, idvm, idvt, idrun, idusr,
+!>             pdryini, ncldt, ixgr, ixga,reserved(17) (50 4-byte words)
+!>           vcoord((levs+1)*nvcoord 4-byte words)
+!>           cfvars(5+ntrac 8-byte character words)
+!>         Data records (word size depends on irealf)
+!>           orography (nc words, where nc=(jcap+1)*(jcap+2))
+!>           log surface pressure (nc words)
+!>           temperature (levs records of nc words)
+!>           divergence (levs records of nc words)
+!>           vorticity (levs records of nc words)
+!>           tracers (levs*ntrac records of nc words)
+!>           scalars (nxss words)
+!>           extra physics grid fields (nxgr records of lonb*latb words)
+!>           extra scalars (nxss words)
+!>           extra dynamics grid fields (nxga records of lonf*latf words)
+!>
+!>   (2) Possible return codes:
+!>       -   0   Successful call
+!>       -  -1   Open or close I/O error
+!>       -  -2   Header record I/O error (possible EOF)
+!>       -  -3   Allocation or deallocation error
+!>       -  -4   Data record I/O error
+!>       -  -5   Insufficient data dimensions allocated
+!>       -  -6   Attempted to read a NEMSIO file
+!> ### Example
+!>   (1) Read the entire sigma file 'sigf24' and
+!>       print out the global mean temperature profile.
+!>
+!> <pre>
+!>     use sigio_module
+!>     type(sigio_head):: head
+!>     type(sigio_data):: data
+!>     call sigio_srohdc(11,'sigf24',head,data,iret)
+!>     print '(f8.2)',data%t(1,head%levs:1:-1)/sqrt(2.)
+!>     end
+!> </pre>
 module sigio_module
-!$$$  Module Documentation Block
-!
-! Module:    sigio_module    API for global spectral sigma file I/O
-!   Prgmmr: iredell          Org: w/nx23     date: 1999-01-18
-!
-! Abstract: This module provides an Application Program Interface
-!   for performing I/O on the sigma restart file of the global spectral model.
-!   Functions include opening, reading, writing, and closing as well as
-!   allocating and deallocating data buffers used in the transfers.
-!   The I/O performed here is sequential.
-!   The transfers are limited to header records or data records.
-!   
-! Program History Log:
-!   1999-01-18  Mark Iredell
-!   2013-10-14  Fanglin Yang: Added dynamics restart fields (ixga etc)
-!                 and restructureed physics restart fields (ixgr etc).
-!   2018-05-11  Mark Iredell: Added error check for NEMSIO file.
-!
-! Public Variables:
-!   sigio_lhead1      Integer parameter length of first header record (=32)
-!   sigio_charkind    Integer parameter kind or length of passed characters (=8)
-!   sigio_intkind     Integer parameter kind or length of passed integers (=4)
-!   sigio_realkind    Integer parameter kind or length of passed reals (=4)
-!   sigio_dblekind    Integer parameter kind or length of passed longreals (=8)
-!   sigio_realfill    Real(sigio_realkind) parameter fill value (=-9999.)
-!   sigio_dblefill    Real(sigio_dblekind) parameter fill value (=-9999.)
-!
-! Public Defined Types:
-!   sigio_head        Sigma file header information
-!     clabsig           Character(sigio_lhead1) ON85 label
-!                       (obsolescent)
-!     fhour             Real(sigio_realkind) forecast hour
-!     idate             Integer(sigio_intkind)(4) initial date
-!                       (hour, month, day, 4-digit year)
-!     si                Real(sigio_realkind)(101) sigma interfaces
-!                       (obsolescent)
-!     sl                Real(sigio_realkind)(100) sigma levels
-!                       (obsolescent)
-!     ak                Real(sigio_realkind)(101) hybrid interface a
-!                       (obsolescent)
-!     bk                Real(sigio_realkind)(101) hybrid interface b
-!                       (obsolescent)
-!     jcap              Integer(sigio_intkind) spectral truncation
-!     levs              Integer(sigio_intkind) number of levels
-!     itrun             Integer(sigio_intkind) truncation flag
-!                       (=1 for triangular)
-!     iorder            Integer(sigio_intkind) coefficient order flag
-!                       (=2 for ibm order)
-!     irealf            Integer(sigio_intkind) floating point flag
-!                       (=1 for 4-byte ieee, =2 for 8-byte ieee)
-!     igen              Integer(sigio_intkind) model generating flag
-!     latf              Integer(sigio_intkind) latitudes in dynamics
-!                       (=(jcap+1)*3/2)
-!     lonf              Integer(sigio_intkind) longitudes in dynamics
-!                       (>=(jcap+1)*3 appropriate for fft)
-!     latb              Integer(sigio_intkind) latitudes in physics
-!     lonb              Integer(sigio_intkind) longitudes in physics
-!     latr              Integer(sigio_intkind) latitudes in radiation
-!     lonr              Integer(sigio_intkind) longitudes in radiation
-!     ntrac             Integer(sigio_intkind) number of tracers
-!     icen2             Integer(sigio_intkind) subcenter id
-!     iens              Integer(sigio_intkind)(2) ensemble ids
-!     idpp              Integer(sigio_intkind) processing id
-!     idsl              Integer(sigio_intkind) semi-lagrangian id
-!     idvc              Integer(sigio_intkind) vertical coordinate id
-!                       (=1 for sigma, =2 for ec-hybrid, =3 for ncep hybrid)
-!     idvm              Integer(sigio_intkind) mass variable id
-!     idvt              Integer(sigio_intkind) tracer variable id
-!     idrun             Integer(sigio_intkind) run id
-!     idusr             Integer(sigio_intkind) user-defined id
-!     pdryini           Real(sigio_realkind) global mean dry air pressure (kPa)
-!                       (obsolescent)
-!     ncldt             Integer(sigio_intkind) number of cloud types
-!     ixgr              Integer(sigio_intkind) extra fileds for physics.
-!                         ixgr=00000000  no extra fields                                      
-!                         ixgr=0000000a  zhao micro,    a=1: zhao1, two 3d, one 2d, and nxss=0            
-!                                                       a=2: zhao2, four 3d, three 2d, and nxss=0            
-!                                                       a=3: zhao2, four 3d, three 2d, and nxss=1            
-!                         ixgr=000000b0  ferrier micro, b=1: three 3d, one 2d, and nxss=0          
-!                                        ferrier micro, b=2: three 3d, one 2d, and nxss=1           
-!                         ixgr=00000c00  c=1, pdf cld, three 3d                      
-!     ixga              Integer(sigio_intkind) extra fileds for dynamics. 
-!                         ixga=00000000  no extra fields                                      
-!                         ixga=0000000a  zflxtvd micro,   ntrac 3d, zero 2d            
-!                         ixga=000000b0  (reserved for) joe-sela semi-lag gfs
-!     ivs               Integer(sigio_intkind) version number
-!     nvcoord           Integer(sigio_intkind) number of vcoord profiles
-!  The following variables should be allocated with sigio_alhead:
-!     vcoord            Real(sigio_realkind)((levs+1),nvcoord) vcoord profiles
-!     cfvars            Character(8)(5+ntrac) field variable names
-!  The following variables should not be modified by the user:
-!     nxgr              Integer(sigio_intkind) number of extra physics grid fields
-!     nxss              Integer(sigio_intkind) number of extra scalars
-!     nxga              Integer(sigio_intkind) number of extra dynamics grid fields
-!     nhead             Integer(sigio_intkind) number of header records
-!     ndata             Integer(sigio_intkind) number of data records
-!     lhead             Integer(sigio_intkind)(nhead) header record lengths
-!     ldata             Integer(sigio_intkind)(ndata) data record lengths
-!
-!   sigio_data        Sigma file data fields
-!     hs                Real(sigio_realkind)(:) pointer to spectral
-!                       coefficients of surface height in m
-!     ps                Real(sigio_realkind)(:) pointer to spectral
-!                       coefficients of log of surface pressure over 1 kPa
-!     t                 Real(sigio_realkind)(:,:) pointer to spectral
-!                       coefficients of virtual temperature by level in K
-!     d                 Real(sigio_realkind)(:,:) pointer to spectral
-!                       coefficients of divergence by level in 1/second
-!     z                 Real(sigio_realkind)(:,:) pointer to spectral
-!                       coefficients of vorticity by level in 1/second
-!     q                 Real(sigio_realkind)(:,:,:) pointer to spectral
-!                       coefficients of tracers by level and tracer number
-!                       in specific densities
-!     xgr               Real(sigio_realkind)(:,:,:) pointer to extra grid fields
-!                       by longitude, latitude and number of extra physics grid fields
-!     xss               Real(sigio_realkind)(:) pointer to scalar array
-!     xga               Real(sigio_realkind)(:,:,:) pointer to extra dynamics grid fields
-!                       by longitude, latitude and number of extra grid fields
-!                       
-!   sigio_dbta        Sigma file longreal data fields
-!     hs                Real(sigio_dblekind)(:) pointer to spectral
-!                       coefficients of surface height in m
-!     ps                Real(sigio_dblekind)(:) pointer to spectral
-!                       coefficients of log of surface pressure over 1 kPa
-!     t                 Real(sigio_dblekind)(:,:) pointer to spectral
-!                       coefficients of virtual temperature by level in K
-!     d                 Real(sigio_dblekind)(:,:) pointer to spectral
-!                       coefficients of divergence by level in 1/second
-!     z                 Real(sigio_dblekind)(:,:) pointer to spectral
-!                       coefficients of vorticity by level in 1/second
-!     q                 Real(sigio_dblekind)(:,:,:) pointer to spectral
-!                       coefficients of tracers by level and tracer number
-!                       in specific densities
-!     xgr               Real(sigio_dblekind)(:,:,:) pointer to extra physics grid fields
-!                       by longitude, latitude and number of extra grid fields
-!     xss               Real(sigio_dblekind)(:) pointer to scalar array
-!     xga               Real(sigio_dblekind)(:,:,:) pointer to extra dynamics grid fields
-!                       by longitude, latitude and number of extra grid fields
-!                       
-! Public Subprograms:
-!   sigio_sropen      Open sigma file for sequential reading
-!     lu                Integer(sigio_intkind) input logical unit
-!     cfname            Character(*) input filename
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_swopen      Open sigma file for sequential writing
-!     lu                Integer(sigio_intkind) input logical unit
-!     cfname            Character(*) input filename
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_sclose      Close sigma file for sequential I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_srhead      Read header information with sequential I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) output header information
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_swhead      Write header information with sequential I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_alhead      Allocate head allocatables
-!     head              Type(sigio_head) input/output header information
-!     iret              Integer(sigio_intkind) output return code
-!     levs              Integer(sigio_intkind) optional number of levels
-!     nvcoord           Integer(sigio_intkind) optional number of vcoords
-!     ntrac             Integer(sigio_intkind) optional number of tracers
-!
-!   sigio_aldata      Allocate data fields
-!     head              Type(sigio_head) input header information
-!     data              Type(sigio_data) output data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_axdata      Deallocate data fields
-!     data              Type(sigio_data) output data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_srdata      Read data fields with sequential I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     data              Type(sigio_data) output data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_swdata      Write data fields with sequential I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     data              Type(sigio_data) input data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_aldbta      Allocate longreal data fields
-!     head              Type(sigio_head) input header information
-!     dbta              Type(sigio_dbta) output longreal data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_axdbta      Deallocate longreal data fields
-!     dbta              Type(sigio_dbta) output longreal data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_srdbta      Read longreal data fields with sequential I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dbta              Type(sigio_dbta) output longreal data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_swdbta      Write longreal data fields with sequential I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     head              Type(sigio_head) input header information
-!     dbta              Type(sigio_dbta) input longreal data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_srohdc      Open, read header & data and close with sequential I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     cfname            Character(*) input filename
-!     head              Type(sigio_head) output header information
-!     data              Type(sigio_data) or type(sigio_dbta) output data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_swohdc      Open, write header & data and close with sequential I/O
-!     lu                Integer(sigio_intkind) input logical unit
-!     cfname            Character(*) input filename
-!     head              Type(sigio_head) input header information
-!     data              Type(sigio_data) or type(sigio_dbta) output data fields
-!     iret              Integer(sigio_intkind) output return code
-!
-!   sigio_modpr        Compute model pressures
-!     im                Integer(sigio_intkind) input number of points
-!     ix                Integer(sigio_intkind) input first dimension
-!     km                Integer(sigio_intkind) input number of levels
-!     nvcoord           Integer(sigio_intkind) input number of vertical coords
-!     idvc              Integer(sigio_intkind) input vertical coordinate id
-!                       (1 for sigma and 2 for hybrid)
-!     idsl              Integer(sigio_intkind) input type of sigma structure
-!                       (1 for phillips or 2 for mean)
-!     vcoord            Real(sigio_realkind)(km+1,nvcoord) input vertical coords
-!                       for idvc=1, nvcoord=1: sigma interface
-!                       for idvc=2, nvcoord=2: hybrid interface a and b
-!     iret              Integer(sigio_intkind) output return code
-!     ps                Real(sigio_realkind)(ix) input optional surface pressure (Pa)
-!     tv                Real(sigio_realkind)(ix,km) input optional virtual temperature (K)
-!     pd                Real(sigio_realkind)(ix,km) output optional delta pressure (Pa)
-!     pm                Real(sigio_realkind)(ix,km) output optional layer pressure (Pa)
-!
-!   sigio_modprd      Compute model pressures - double precision
-!     im                Integer(sigio_intkind) input number of points
-!     ix                Integer(sigio_intkind) input first dimension
-!     km                Integer(sigio_intkind) input number of levels
-!     nvcoord           Integer(sigio_intkind) input number of vertical coords
-!     idvc              Integer(sigio_intkind) input vertical coordinate id
-!                       (1 for sigma and 2 for hybrid)
-!     idsl              Integer(sigio_intkind) input type of sigma structure
-!                       (1 for phillips or 2 for mean)
-!     vcoord            Real(sigio_realkind)(km+1,nvcoord) input vertical coords
-!                       for idvc=1, nvcoord=1: sigma interface
-!                       for idvc=2, nvcoord=2: hybrid interface a and b
-!     iret              Integer(sigio_intkind) output return code
-!     ps                Real(sigio_dblekind)(ix) input optional surface pressure (Pa)
-!     tv                Real(sigio_dblekind)(ix,km) input optional virtual temperature (K)
-!     pd                Real(sigio_dblekind)(ix,km) output optional delta pressure (Pa)
-!     pm                Real(sigio_dblekind)(ix,km) output optional layer pressure (Pa)
-!
-!   sigio_adhead        Set private data in header
-!     head              Type(sigio_head) input/output header information
-!
-!   sigio_cnvpsv        Convert from model mass variable to pressure (Pa)
-!                       when cnflg > 0, or the opposite when cnflag <= 0.
-!                       Values of IDVM determines variable. 
-!     im                Integer(sigio_intkind) input number of points
-!     idvm              Integer(sigio_intkind) mass variable id
-!     ps                Real(sigio_realkind)(im) inout mass variable or ps (Pa)
-!     dp                Real(sigio_realkind)(im) output dp(out)/dp(in)
-!     cnflg             Integer(sigio_intkind) input conversion flag.
-!                       when >0, conversion is to surface pressure (Pa) and
-!                       when <= 0, the conversion is to model mass variable.
-!
-!   sigio_cnvtdv        Convert from Virtual Temperature (Tv) or Enthalpy (h)
-!                       to sensible Temperature (when cnflag > 0) and the opposite
-!                       when cnflag <= 0. Values of IDVM determines Tv or h
-!     im                Integer(sigio_intkind) input number of points
-!     ix                Integer(sigio_intkind) input first dimension
-!     km                Integer(sigio_intkind) input number of levels
-!     idvc              Integer(sigio_intkind) input vertical coordinate id
-!                       (1 for sigma, 2 for hybrid, and 3 for general hybrid)
-!     idvm              Integer(sigio_intkind) mass variable id
-!                       (32 for enthalpy)
-!     ntrac             Integer(sigio_intkind) input number of tracers
-!     iret              Integer(sigio_intkind) output return code
-!     t                 Real(sigio_realkind)(ix,km) input Tv, h or T
-!     q                 Real(sigio_realkind)(ix,km,ntrac) input tracers
-!     cpi               Real(sigio_realkind)(ntrac) input specific heat at constant
-!                       pressure for tracers
-!    cnflg              Integer(sigio_intkind) input conversion flag. when >0
-!                       conversion is to dry temperature from Tv or h and when
-!                       <= 0, the conversion is from dry temperature to Tv or h.
-!
-! Remarks:
-!   (1) The sigma file format follows:
-!       For ivs=198410:
-!         ON85 label (32 bytes)
-!         Header information record containing
-!           real forecast hour, initial date, sigma interfaces, sigma levels,
-!           padding to allow for 100 levels, and finally 44 identifier words
-!           containing JCAP, LEVS, NTRAC, IREALF, etc. (250 4-byte words)
-!           (word size in the remaining records depends on the value of IREALF)
-!         Orography (NC words, where NC=(JCAP+1)*(JCAP+2))
-!         Log surface pressure (NC words)
-!         Temperature (LEVS records of NC words)
-!         Divergence & Vorticity interleaved (2*LEVS records of NC words)
-!         Tracers (LEVS*NTRAC records of NC words)
-!         Extra grid fields (NXGR records of LONB*LATB words)
-!       For ivs=200509:
-!         Label containing
-!           'GFS ','SIG ',ivs,nhead,ndata,reserved(3) (8 4-byte words)
-!         Header records
-!           lhead(nhead),ldata(ndata) (nhead+ndata 4-byte words)
-!           fhour, idate(4), jcap, levs, itrun, iorder, irealf, igen,
-!             latf, lonf, latb, lonb, latr, lonr, ntrac, nvcoord, 
-!             icen2, iens(2), idpp, idsl, idvc, idvm, idvt, idrun, idusr,
-!             pdryini, ncldt, ixgr, ixga,reserved(17) (50 4-byte words)
-!           vcoord((levs+1)*nvcoord 4-byte words)
-!           cfvars(5+ntrac 8-byte character words)
-!         Data records (word size depends on irealf)
-!           orography (nc words, where nc=(jcap+1)*(jcap+2))
-!           log surface pressure (nc words)
-!           temperature (levs records of nc words)
-!           divergence (levs records of nc words)
-!           vorticity (levs records of nc words)
-!           tracers (levs*ntrac records of nc words)
-!           scalars (nxss words)
-!           extra physics grid fields (nxgr records of lonb*latb words)
-!           extra scalars (nxss words)
-!           extra dynamics grid fields (nxga records of lonf*latf words)
-!
-!   (2) Possible return codes:
-!          0   Successful call
-!         -1   Open or close I/O error
-!         -2   Header record I/O error (possible EOF)
-!         -3   Allocation or deallocation error
-!         -4   Data record I/O error
-!         -5   Insufficient data dimensions allocated
-!         -6   Attempted to read a NEMSIO file
-!
-! Examples:
-!   (1) Read the entire sigma file 'sigf24' and
-!       print out the global mean temperature profile.
-!
-!     use sigio_module
-!     type(sigio_head):: head
-!     type(sigio_data):: data
-!     call sigio_srohdc(11,'sigf24',head,data,iret)
-!     print '(f8.2)',data%t(1,head%levs:1:-1)/sqrt(2.)
-!     end
-!
-! Attributes:
-!   Language: Fortran 90
-!
-!$$$
   implicit none
   private
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
