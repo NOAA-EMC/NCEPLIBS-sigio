@@ -16,6 +16,7 @@ include(GNUInstallDirs)
 # Handle user options.
 option(ENABLE_TESTS "Build pfunit tests?" OFF)
 OPTION(ENABLE_DOCS "Enable generation of doxygen-based documentation." OFF)
+OPTION(BUILD_UTILS "Build historical utilities to manipulate GFS Spectral files." OFF)
 
 if(NOT CMAKE_BUILD_TYPE MATCHES "^(Debug|Release|RelWithDebInfo|MinSizeRel)$")
   message(STATUS "Setting build type to 'Release' as none was specified.")
@@ -33,8 +34,12 @@ if(ENABLE_TESTS)
   add_subdirectory(tests)
 endif()
 
+if(BUILD_UTILS)
+  add_subdirectory(utils)
+endif()
+
 # Generate docs if desired.
 IF(ENABLE_DOCS)
   FIND_PACKAGE(Doxygen REQUIRED)
 ENDIF()
-ADD_SUBDIRECTORY(docs)  
+ADD_SUBDIRECTORY(docs)
