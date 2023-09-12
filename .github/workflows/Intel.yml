@@ -43,13 +43,13 @@ jobs:
       with:
         repository: Goddard-Fortran-Ecosystem/pFUnit
         path: pfunit
+        submodules: true
 
     - name: build-pfunit
       if: steps.cache-pfunit.outputs.cache-hit != 'true'
       run: |
         cd pfunit
         # Avoid memory sanitizer problem with IntelLLVM for fargparse:
-        find
         sed -i 's:  set(check_all "-check all")::' extern/fArgParse/cmake/IntelLLVM.cmake
         mkdir build
         cd build
