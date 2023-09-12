@@ -49,6 +49,7 @@ jobs:
       run: |
         cd pfunit
         # Avoid memory sanitizer problem with IntelLLVM for fargparse:
+        find
         sed -i 's:  set(check_all "-check all")::' extern/fArgParse/cmake/IntelLLVM.cmake
         mkdir build
         cd build
