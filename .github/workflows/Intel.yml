@@ -50,7 +50,7 @@ jobs:
       run: |
         cd pfunit
         # Avoid memory sanitizer problem with recent IntelLLVM versions:
-        sed -i 's:  set(check_all "-check all")::' extern/fArgParse/cmake/IntelLLVM.cmake cmake/IntelLLVM.cmake
+        find -name IntelLLVM.cmake | xargs sed -i 's:  set(check_all "-check all")::'
         mkdir build
         cd build
         ${{ matrix.compilers }} cmake .. -DSKIP_MPI=YES -DSKIP_ESMF=YES -DSKIP_FHAMCREST=YES -DCMAKE_INSTALL_PREFIX=~/pfunit
