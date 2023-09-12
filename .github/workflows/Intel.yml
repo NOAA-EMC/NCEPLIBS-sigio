@@ -49,11 +49,11 @@ jobs:
       if: steps.cache-pfunit.outputs.cache-hit != 'true'
       run: |
         cd pfunit
-        # Avoid memory sanitizer problem with recent IntelLLVM versions:
-        for f in $(find -name '*.cmake'); do sed -i 's:-check all::' $f ; done
         mkdir build
         cd build
         ${{ matrix.compilers }} cmake .. -DSKIP_MPI=YES -DSKIP_ESMF=YES -DSKIP_FHAMCREST=YES -DCMAKE_INSTALL_PREFIX=~/pfunit
+        # Avoid memory sanitizer problem with recent IntelLLVM versions:
+        for f in $(find -type f); do sed -i 's:-check all::' $f ; done
         make -j2
         make install
 
