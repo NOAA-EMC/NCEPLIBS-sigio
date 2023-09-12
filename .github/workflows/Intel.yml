@@ -48,6 +48,8 @@ jobs:
       if: steps.cache-pfunit.outputs.cache-hit != 'true'
       run: |
         cd pfunit
+        # Avoid memory sanitizer problem with IntelLLVM for fargparse:
+        sed -i 's:  set(check_all "-check all")::' extern/fArgParse/cmake/IntelLLVM.cmake
         mkdir build
         cd build
         ${{ matrix.compilers }} cmake .. -DSKIP_MPI=YES -DSKIP_ESMF=YES -DSKIP_FHAMCREST=YES -DCMAKE_INSTALL_PREFIX=~/pfunit
