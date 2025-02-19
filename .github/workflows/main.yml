@@ -3,12 +3,19 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    env:
-      FC: gfortran-11
-      CC: gcc-11
+    runs-on: ubuntu-24.04
+
+    strategy:
+      matrix:
+        gcc-version: [12,14]
 
     steps:
+
+    - name: get-gcc
+      run: |
+        if [ -z $(type -P gcc-${{ matrix.gcc-version }}) ]; then
+          sudo apt install gcc-${{ matrix.gcc-version }}
+        fi
 
     - name: Installs
       run: sudo apt-get install doxygen graphviz 
@@ -20,6 +27,7 @@ jobs:
 
     - name: build
       run: |
+        export CC=gcc-${{ matrix.gcc-version }} ; export FC=gfortran-${{ matrix.gcc-version }}
         cmake -S sigio -B sigio/build -DENABLE_DOCS=ON
         cmake --build sigio/build --parallel 2 --verbose
     
