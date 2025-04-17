@@ -32,7 +32,7 @@ ctest --test-dir NCEPLIBS-sigio/build --parallel 2 # <add'l CTest options>
 cmake --install NCEPLIBS-sigio/build
 ```
 
-NCEPLIBS-sigio is also available through Spack as '[sigio](https://github.com/spack/spack/tree/develop/var/spack/repos/builtin/packages/sigio)'.
+NCEPLIBS-sigio is also available through [Spack](https://spack.io) as '[sigio](https://github.com/spack/spack/tree/develop/var/spack/repos/builtin/packages/sigio)'.
 
 ## Disclaimer
 
