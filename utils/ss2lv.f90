@@ -72,20 +72,20 @@ subroutine ss2lv1(luvar,head,data)
   call spvar(0,head%jcap,data%ps,v1,1)
   call wryte(luvar,4*head%jcap,log10(max(v1(1:),tiny(v1))))
   do k=1,head%levs
-    call spvar(0,head%jcap,data%t(1,k),v1,1)
+    call spvar(0,head%jcap,(/data%t(1,k)/),v1,1)
     call wryte(luvar,4*head%jcap,log10(max(v1(1:),tiny(v1))))
   enddo
   do k=1,head%levs
-    call spvar(0,head%jcap,data%d(1,k),v1,1)
+    call spvar(0,head%jcap,(/data%d(1,k)/),v1,1)
     call wryte(luvar,4*head%jcap,log10(max(v1(1:),tiny(v1))))
   enddo
   do k=1,head%levs
-    call spvar(0,head%jcap,data%z(1,k),v1,1)
+    call spvar(0,head%jcap,(/data%z(1,k)/),v1,1)
     call wryte(luvar,4*head%jcap,log10(max(v1(1:),tiny(v1))))
   enddo
   do n=1,head%ntrac
     do k=1,head%levs
-      call spvar(0,head%jcap,data%q(1,k,n),v1,1)
+      call spvar(0,head%jcap,(/data%q(1,k,n)/),v1,1)
       call wryte(luvar,4*head%jcap,log10(max(v1(1:),tiny(v1))))
     enddo
   enddo

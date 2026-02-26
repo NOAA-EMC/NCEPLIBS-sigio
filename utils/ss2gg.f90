@@ -186,7 +186,7 @@ subroutine ss2gg1(luggg,idrt,imax,jmax,head,data)
   call wryte(luggg,4*imax*jmax*head%levs,g2)
 
   do n=2,head%ntrac
-    call sptezm(0,head%jcap,idrt,imax,jmax,head%levs,data%q(1,1,n),g1,1)
+    call sptezm(0,head%jcap,idrt,imax,jmax,head%levs,(/data%q(1,1,n)/),g1,1)
     call wryte(luggg,4*imax*jmax*head%levs,g1)
   enddo
 end subroutine
@@ -216,7 +216,7 @@ subroutine ss2gg2(luctl,idrt,imax,jmax,nsig,head,cfggg)
     jhr=12
   endif
   call modpr(1,1,head(1)%levs,head(1)%nvcoord,head(1)%idvc,head(1)%idsl,&
-             head(1)%vcoord,1.e5,sl,dl)
+             head(1)%vcoord,(/1.e5/),sl,dl)
   sl=sl/1.e5
   dl=dl/1.e5
   if(cfggg(1:1).eq.'/') then
