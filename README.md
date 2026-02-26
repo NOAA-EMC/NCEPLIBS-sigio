@@ -1,4 +1,4 @@
-![Status](https://github.com/NOAA-EMC/NCEPLIBS-sp/workflows/Build%20and%20Test/badge.svg)
+![Status](https://github.com/NOAA-EMC/NCEPLIBS-sigio/workflows/Build%20and%20Test/badge.svg)
 
 # SIGIO
 
@@ -14,21 +14,25 @@ project.
 
 For full documentation see https://noaa-emc.github.io/NCEPLIBS-sigio/.
 
+To submit bug reports, feature requests, or other code-related issues including installation and usage questions, please create a [GitHub issue](https://github.com/NOAA-EMC/NCEPLIBS-sigio/issues). For general NCEPLIBS inquiries, contact [Edward Hartnett](mailto:edward.hartnett@noaa.gov) (secondary point of contact [Alex Richert](mailto:alexander.richert@noaa.gov)).
+
 ## Authors
 
 NCEP/EMC developers.
 
-Code Manager: Kyle Gerheiser
+Code Manager: [Alex Richert](mailto:alexander.richert@noaa.gov)
 
 ## Installing
 
+```console
+git clone https://github.com/NOAA-EMC/NCEPLIBS-sigio # or download a release from https://github.com/NOAA-EMC/NCEPLIBS-sigio/releases
+cmake -DCMAKE_INSTALL_PREFIX=/path/to/install -S NCEPLIBS-sigio -B NCEPLIBS-sigio/build # <add'l CMake options>
+cmake --build NCEPLIBS-sigio/build --parallel 2
+ctest --test-dir NCEPLIBS-sigio/build --parallel 2 # <add'l CTest options>
+cmake --install NCEPLIBS-sigio/build
 ```
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=/path/to/install /path/to/NCEPLIBS-sigio
-make -j2
-make install
-```
+
+NCEPLIBS-sigio is also available through [Spack](https://spack.io) as '[sigio](https://github.com/spack/spack/tree/develop/var/spack/repos/builtin/packages/sigio)'.
 
 ## Disclaimer
 

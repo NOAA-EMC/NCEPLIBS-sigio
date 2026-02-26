@@ -1,5 +1,3 @@
-
-add_pfunit_ctest (sigio_test
-  TEST_SOURCES test_sigio_mod.pf
-  LINK_LIBRARIES sigio
-)
+add_executable(test_sigio_module test_sigio_module.F90)
+target_link_libraries(test_sigio_module PUBLIC ${PROJECT_NAME})
+add_test(test_sigio_module test_sigio_module)

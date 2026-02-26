@@ -1,0 +1,41 @@
+# This is a CI workflow for the NCEPLIBS-sigio project.
+#
+# This workflow builds with the Intel Classic and OneAPI compilers.
+#
+# Alex Richert, Sep 2023
+name: Intel
+on:
+  push:
+    branches:
+    - develop
+  pull_request:
+    branches:
+    - develop
+
+jobs:
+  Intel:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compilers: ["oneapi", "classic"]
+
+    steps:
+
+    - name: "Install Intel"
+      uses: NOAA-EMC/ci-install-intel-toolkit@develop
+      with:
+        compiler-setup: ${{ matrix.compilers }}
+
+    - name: checkout
+      uses: actions/checkout@v4
+      with: 
+        path: sigio
+
+    - name: build
+      run: |
+        cmake -S sigio -B sigio/build
+        cmake --build sigio/build --parallel 2 --verbose
+
+    - name: test-sigio
+      run: |
+        ctest --test-dir sigio/build --verbose --output-on-failure --rerun-failed
