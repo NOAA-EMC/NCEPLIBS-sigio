@@ -14,7 +14,9 @@ project(
 include(GNUInstallDirs)
 
 # Handle user options.
-option(ENABLE_DOCS "Enable generation of doxygen-based documentation." OFF)
+option(ENABLE_TESTS "Build pfunit tests?" OFF)
+OPTION(ENABLE_DOCS "Enable generation of doxygen-based documentation." OFF)
+OPTION(BUILD_UTILS "Build historical utilities to manipulate GFS Spectral files." OFF)
 
 if(NOT CMAKE_BUILD_TYPE MATCHES "^(Debug|Release|RelWithDebInfo|MinSizeRel)$")
   message(STATUS "Setting build type to 'Release' as none was specified.")
@@ -29,6 +31,10 @@ add_subdirectory(src)
 include(CTest)
 if(BUILD_TESTING)
   add_subdirectory(tests)
+endif()
+
+if(BUILD_UTILS)
+  add_subdirectory(utils)
 endif()
 
 # Generate docs if desired.
