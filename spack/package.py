@@ -27,6 +27,11 @@ class Sigio(CMakePackage):
 
     depends_on("fortran", type="build")
 
+    with when("+utils"):
+        depends_on("bacio")
+        depends_on("w3nco")
+        depends_on("sp")
+
     conflicts("%oneapi", when="@:2.3.2", msg="Requires @2.3.3: for Intel OneAPI")
 
     def cmake_args(self):
