@@ -1,7 +1,8 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack_repo.builtin.build_systems.cmake import CMakePackage
 
 from spack.package import *
 
@@ -19,13 +20,23 @@ class Sigio(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
     version("develop", branch="develop")
+    version("2.3.3", sha256="2b4a04be3be10f222d0ff47f973f65a03b8b5521dcad8e8866f3bfe4e8dfafab")
     version("2.3.2", sha256="333f3cf3a97f97103cbafcafc2ad89b24faa55b1332a98adc1637855e8a5b613")
 
+    variant("utils", default=False, description="Build add'l utilities")
+
+    depends_on("fortran", type="build")
+
+    conflicts("%oneapi", when="@:2.3.2", msg="Requires @2.3.3: for Intel OneAPI")
+
     def cmake_args(self):
-        args = [self.define("ENABLE_TESTS", self.run_tests)]
+        args = [
+            self.define("ENABLE_TESTS", self.run_tests),
+            self.define_from_variant("BUILD_UTILS", "utils"),
+        ]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         lib = find_libraries("libsigio", root=self.prefix, shared=False, recursive=True)
         # Only one library version, but still need to set _4 to make NCO happy
         for suffix in ("4", ""):
